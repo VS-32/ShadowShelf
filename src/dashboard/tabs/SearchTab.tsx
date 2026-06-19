@@ -10,7 +10,7 @@ type ResultItem =
   | { kind: 'clipboard'; data: ClipboardEntry }
 
 const KIND_META = {
-  visit:     { label: 'Visit',     color: '#6366f1', Icon: IconGlobe },
+  visit:     { label: 'Visit',     color: '#06b6d4', Icon: IconGlobe },
   highlight: { label: 'Highlight', color: '#8b5cf6', Icon: IconBookmark },
   clipboard: { label: 'Clipboard', color: '#22d3ee', Icon: IconClipboard },
 }
@@ -44,7 +44,7 @@ export default function SearchTab() {
     return (
       <>
         {text.slice(0, idx)}
-        <mark style={{ background: 'rgba(99,102,241,0.3)', color: '#a5b4fc', borderRadius: 3, padding: '0 2px' }}>
+        <mark style={{ background: 'rgba(6,182,212,0.25)', color: '#67e8f9', borderRadius: 3, padding: '0 2px' }}>
           {text.slice(idx, idx + query.length)}
         </mark>
         {text.slice(idx + query.length)}
@@ -78,7 +78,7 @@ export default function SearchTab() {
             transition: 'border-color 0.2s, box-shadow 0.2s',
             boxSizing: 'border-box',
           }}
-          onFocus={e => { e.target.style.borderColor = 'rgba(99,102,241,0.5)'; e.target.style.boxShadow = '0 0 0 3px rgba(99,102,241,0.12)' }}
+          onFocus={e => { e.target.style.borderColor = 'rgba(6,182,212,0.5)'; e.target.style.boxShadow = '0 0 0 3px rgba(6,182,212,0.12)' }}
           onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.09)'; e.target.style.boxShadow = 'none' }}
         />
         {query && (
@@ -110,7 +110,7 @@ export default function SearchTab() {
 
       {searching && (
         <div style={{ color: '#475569', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid #6366f1', borderTopColor: 'transparent', animation: 'spin 0.7s linear infinite' }} />
+          <div style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid #06b6d4', borderTopColor: 'transparent', animation: 'spin 0.7s linear infinite' }} />
           Searching…
         </div>
       )}

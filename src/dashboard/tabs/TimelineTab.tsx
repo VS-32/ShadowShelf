@@ -4,9 +4,9 @@ import { formatDuration } from '../../utils/categorize'
 import type { PageVisit } from '../../types'
 
 const CAT_COLOR: Record<string, string> = {
-  Learning: '#6366f1', Work: '#10b981', Entertainment: '#8b5cf6',
+  Learning: '#06b6d4', Work: '#10b981', Entertainment: '#8b5cf6',
   'Social Media': '#ec4899', Shopping: '#f97316', Finance: '#eab308',
-  News: '#22d3ee', Other: '#64748b',
+  News: '#3b82f6', Other: '#64748b',
 }
 
 function getDates(n: number) {
@@ -60,10 +60,10 @@ export default function TimelineTab() {
               padding: '6px 14px', borderRadius: 99, border: 'none', cursor: 'pointer',
               fontSize: 12, fontWeight: active ? 700 : 500,
               background: active
-                ? 'linear-gradient(135deg, #6366f1, #8b5cf6)'
+                ? 'linear-gradient(135deg, #06b6d4, #0ea5e9)'
                 : 'rgba(255,255,255,0.04)',
               color: active ? '#fff' : '#64748b',
-              boxShadow: active ? '0 4px 12px rgba(99,102,241,0.3)' : 'none',
+              boxShadow: active ? '0 4px 12px rgba(6,182,212,0.3)' : 'none',
               transition: 'all 0.15s',
             }}>
               {label}

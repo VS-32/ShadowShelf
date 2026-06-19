@@ -7,16 +7,16 @@ import { IconBookmark, IconGlobe, IconTrendingUp } from '../../components/Icons'
 import type { Category, Highlight, PageVisit } from '../../types'
 
 const CAT_COLOR: Record<Category, string> = {
-  Learning: '#6366f1', Work: '#10b981', Entertainment: '#8b5cf6',
+  Learning: '#06b6d4', Work: '#10b981', Entertainment: '#8b5cf6',
   'Social Media': '#ec4899', Shopping: '#f97316', Finance: '#eab308',
-  News: '#22d3ee', Other: '#64748b',
+  News: '#3b82f6', Other: '#64748b',
 }
 
 function FocusRing({ score }: { score: number }) {
   const r = 52, stroke = 8, circ = 2 * Math.PI * r
   const offset = circ - (score / 100) * circ
-  const color = score >= 70 ? '#10b981' : score >= 40 ? '#6366f1' : '#f97316'
-  const color2 = score >= 70 ? '#34d399' : score >= 40 ? '#a78bfa' : '#fb923c'
+  const color = score >= 70 ? '#10b981' : score >= 40 ? '#06b6d4' : '#f97316'
+  const color2 = score >= 70 ? '#34d399' : score >= 40 ? '#38bdf8' : '#fb923c'
   return (
     <svg width="136" height="136" viewBox="0 0 136 136">
       <defs>
@@ -69,12 +69,10 @@ export default function HomeTab() {
         .map(([domain, duration]) => ({ domain, duration }))
       setStats({ totalTime, breakdown, topDomains, focusScore: computeFocusScore(breakdown), visitCount: visits.length })
 
-      // Character profile from last 7 days
       const cutoff = Date.now() - 7 * 86400_000
       const weekVisits: PageVisit[] = await db.visits.where('startTime').above(cutoff).toArray()
       setProfile(computeProfile(weekVisits))
 
-      // Break status
       const breakRes = await chrome.runtime.sendMessage({ type: 'GET_BREAK_STATUS' }).catch(() => ({ elapsed: 0 }))
       const intervalMs = (stored.breakIntervalMin ?? 45) * 60_000
       const needed = stored.breakIntervalMin > 0 && (breakRes.elapsed ?? 0) >= intervalMs
@@ -106,16 +104,16 @@ export default function HomeTab() {
 
       {/* Daily quote */}
       <div style={{
-        background: 'rgba(99,102,241,0.07)', border: '1px solid rgba(99,102,241,0.15)',
+        background: 'rgba(6,182,212,0.06)', border: '1px solid rgba(6,182,212,0.14)',
         borderRadius: 14, padding: '16px 20px', marginBottom: 20,
         display: 'flex', alignItems: 'flex-start', gap: 14,
       }}>
         <div style={{ fontSize: 24, flexShrink: 0 }}>✨</div>
         <div>
-          <p style={{ fontSize: 14, color: '#a5b4fc', fontStyle: 'italic', margin: '0 0 6px', lineHeight: 1.6 }}>
+          <p style={{ fontSize: 14, color: '#67e8f9', fontStyle: 'italic', margin: '0 0 6px', lineHeight: 1.6 }}>
             "{quote.text}"
           </p>
-          <p style={{ fontSize: 12, color: '#4f46e5', margin: 0, fontWeight: 700 }}>— {quote.author}</p>
+          <p style={{ fontSize: 12, color: '#0891b2', margin: 0, fontWeight: 700 }}>— {quote.author}</p>
         </div>
       </div>
 
@@ -207,13 +205,13 @@ export default function HomeTab() {
 
       {/* Hero stats */}
       <div style={{
-        background: 'linear-gradient(135deg, rgba(99,102,241,0.10) 0%, rgba(139,92,246,0.05) 50%, transparent 100%)',
-        border: '1px solid rgba(99,102,241,0.18)', borderRadius: 20, padding: 24, marginBottom: 20,
+        background: 'linear-gradient(135deg, rgba(6,182,212,0.09) 0%, rgba(14,165,233,0.04) 50%, transparent 100%)',
+        border: '1px solid rgba(6,182,212,0.16)', borderRadius: 20, padding: 24, marginBottom: 20,
         display: 'flex', alignItems: 'center', gap: 24,
       }}>
         <FocusRing score={stats?.focusScore ?? 0} />
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.08em', color: '#6366f1', marginBottom: 4 }}>Today's Overview</div>
+          <div style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.08em', color: '#06b6d4', marginBottom: 4 }}>Today's Overview</div>
           <div style={{ fontSize: 20, fontWeight: 700, color: '#f1f5f9', marginBottom: 14, letterSpacing: '-0.02em' }}>
             {stats ? (stats.totalTime === 0 ? 'No activity yet — start browsing' : `${formatDuration(stats.totalTime)} online, ${stats.visitCount} visits`) : 'Loading…'}
           </div>
@@ -241,7 +239,7 @@ export default function HomeTab() {
       {/* Stat cards */}
       <div style={{ display: 'flex', gap: 16, marginBottom: 24 }}>
         <StatCard label="Time Online" value={stats ? formatDuration(stats.totalTime) : '—'} sub="Today" />
-        <StatCard label="Focus Score" value={stats ? `${stats.focusScore}/100` : '—'} sub="Productive ratio" accent="#818cf8" />
+        <StatCard label="Focus Score" value={stats ? `${stats.focusScore}/100` : '—'} sub="Productive ratio" accent="#38bdf8" />
         <StatCard label="Unique Sites" value={stats ? `${stats.topDomains.length}` : '—'} sub="Domains today" />
         <StatCard label="Page Visits" value={stats ? `${stats.visitCount}` : '—'} sub="Tab loads today" />
       </div>
@@ -264,7 +262,7 @@ export default function HomeTab() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 12, color: '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const, fontWeight: 500 }}>{domain}</div>
                     <div style={{ height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 99, marginTop: 4 }}>
-                      <div style={{ height: '100%', background: 'linear-gradient(90deg, #6366f1, #8b5cf6)', borderRadius: 99, width: `${(duration / stats.topDomains[0].duration) * 100}%` }} />
+                      <div style={{ height: '100%', background: 'linear-gradient(90deg, #06b6d4, #0ea5e9)', borderRadius: 99, width: `${(duration / stats.topDomains[0].duration) * 100}%` }} />
                     </div>
                   </div>
                   <div style={{ fontSize: 11, color: '#475569', fontWeight: 600, flexShrink: 0 }}>{formatDuration(duration)}</div>
@@ -288,7 +286,7 @@ export default function HomeTab() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 12 }}>
               {highlights.map(h => (
-                <div key={h.id} style={{ borderLeft: '2px solid rgba(99,102,241,0.4)', paddingLeft: 12 }}>
+                <div key={h.id} style={{ borderLeft: '2px solid rgba(6,182,212,0.4)', paddingLeft: 12 }}>
                   <p style={{ margin: '0 0 4px', fontSize: 12, color: '#94a3b8', fontStyle: 'italic', lineHeight: 1.5 }}>
                     "{h.text.slice(0, 100)}{h.text.length > 100 ? '…' : ''}"
                   </p>

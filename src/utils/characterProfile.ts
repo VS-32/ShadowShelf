@@ -24,7 +24,7 @@ const ARCHETYPES: Record<string, Omit<CharacterProfile, 'dominantTrait' | 'peakH
       'Build a "second brain" — save key highlights and revisit them weekly',
       'Try to apply what you learn within 24 hours to cement it in memory',
     ],
-    color: '#6366f1',
+    color: '#06b6d4',
     strengths: ['Curiosity', 'Depth of thinking', 'Continuous improvement'],
   },
   Professional: {

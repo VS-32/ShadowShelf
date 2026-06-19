@@ -8,9 +8,9 @@ import TimerWidget from '../components/TimerWidget'
 import type { Category, PageVisit } from '../types'
 
 const CAT_COLOR: Record<Category, string> = {
-  Learning: '#6366f1', Work: '#10b981', Entertainment: '#8b5cf6',
+  Learning: '#06b6d4', Work: '#10b981', Entertainment: '#8b5cf6',
   'Social Media': '#ec4899', Shopping: '#f97316', Finance: '#eab308',
-  News: '#22d3ee', Other: '#64748b',
+  News: '#3b82f6', Other: '#64748b',
 }
 
 // ── Onboarding screen ─────────────────────────────────────────────────────────
@@ -24,13 +24,13 @@ function Onboarding({ onDone }: { onDone: (name: string) => void }) {
   }
 
   return (
-    <div style={{ width: 340, background: '#070711', fontFamily: 'Inter,sans-serif', padding: '32px 24px 28px' }}>
+    <div style={{ width: 340, background: '#0d1117', fontFamily: 'Inter,sans-serif', padding: '32px 24px 28px' }}>
       <div style={{
         width: 52, height: 52, borderRadius: 16, margin: '0 auto 20px',
-        background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+        background: 'linear-gradient(135deg, #06b6d4, #0ea5e9)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontSize: 24, fontWeight: 800, color: '#fff',
-        boxShadow: '0 8px 24px rgba(99,102,241,0.4)',
+        boxShadow: '0 8px 24px rgba(6,182,212,0.4)',
       }}>S</div>
 
       <h2 style={{ fontSize: 20, fontWeight: 800, color: '#f1f5f9', textAlign: 'center', margin: '0 0 6px', letterSpacing: '-0.03em' }}>
@@ -52,16 +52,16 @@ function Onboarding({ onDone }: { onDone: (name: string) => void }) {
           borderRadius: 12, color: '#f1f5f9', fontSize: 14, fontFamily: 'Inter,sans-serif',
           outline: 'none', marginBottom: 12, transition: 'border-color 0.2s',
         }}
-        onFocus={e => (e.target.style.borderColor = 'rgba(99,102,241,0.6)')}
+        onFocus={e => (e.target.style.borderColor = 'rgba(6,182,212,0.6)')}
         onBlur={e => (e.target.style.borderColor = 'rgba(255,255,255,0.12)')}
       />
 
       <button onClick={submit} disabled={!name.trim()} style={{
         width: '100%', padding: '12px 0', borderRadius: 12, border: 'none',
-        background: name.trim() ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : 'rgba(255,255,255,0.06)',
+        background: name.trim() ? 'linear-gradient(135deg, #06b6d4, #0ea5e9)' : 'rgba(255,255,255,0.06)',
         color: name.trim() ? '#fff' : '#334155', fontSize: 14, fontWeight: 700,
         cursor: name.trim() ? 'pointer' : 'default', fontFamily: 'Inter,sans-serif',
-        boxShadow: name.trim() ? '0 4px 16px rgba(99,102,241,0.35)' : 'none',
+        boxShadow: name.trim() ? '0 4px 16px rgba(6,182,212,0.35)' : 'none',
         transition: 'all 0.2s',
       }}>
         Get Started →
@@ -78,8 +78,8 @@ function Onboarding({ onDone }: { onDone: (name: string) => void }) {
 function FocusRing({ score }: { score: number }) {
   const r = 30, circ = 2 * Math.PI * r
   const offset = circ - (score / 100) * circ
-  const color = score >= 70 ? '#10b981' : score >= 40 ? '#6366f1' : '#f97316'
-  const color2 = score >= 70 ? '#34d399' : score >= 40 ? '#a78bfa' : '#fb923c'
+  const color = score >= 70 ? '#10b981' : score >= 40 ? '#06b6d4' : '#f97316'
+  const color2 = score >= 70 ? '#34d399' : score >= 40 ? '#38bdf8' : '#fb923c'
   return (
     <svg width="80" height="80" viewBox="0 0 80 80" style={{ flexShrink: 0 }}>
       <defs>
@@ -133,11 +133,9 @@ export default function Popup() {
   const quote = getDailyQuote()
 
   const loadData = useCallback(async () => {
-    // Load user name
     const stored = await chrome.storage.local.get(['userName', 'breakIntervalMin'])
     setUserName(stored.userName ?? null)
 
-    // Today stats
     const { visits, totalTime, breakdown } = await getTodayStats()
     const dm: Record<string, number> = {}
     for (const v of visits) dm[v.domain] = (dm[v.domain] ?? 0) + v.duration
@@ -145,14 +143,12 @@ export default function Popup() {
       .map(([domain, duration]) => ({ domain, duration }))
     setStats({ totalTime, breakdown, topDomains, focusScore: computeFocusScore(breakdown) })
 
-    // Break status
     const breakRes = await chrome.runtime.sendMessage({ type: 'GET_BREAK_STATUS' })
       .catch(() => ({ elapsed: 0, breakNotified: false }))
     const intervalMs = (stored.breakIntervalMin ?? 45) * 60_000
     const needed = stored.breakIntervalMin > 0 && breakRes.elapsed >= intervalMs
     setBreakStatus({ elapsed: breakRes.elapsed ?? 0, needed })
 
-    // Character profile from last 7 days
     const cutoff = Date.now() - 7 * 86400_000
     const weekVisits: PageVisit[] = await db.visits.where('startTime').above(cutoff).toArray()
     setProfile(computeProfile(weekVisits))
@@ -177,11 +173,10 @@ export default function Popup() {
     loadData()
   }
 
-  // First launch: show onboarding
   if (loaded && userName === null) return <Onboarding onDone={handleOnboarded} />
   if (!loaded) {
     return (
-      <div style={{ width: 340, background: '#070711', padding: '40px 0', textAlign: 'center', color: '#334155', fontSize: 13, fontFamily: 'Inter,sans-serif' }}>
+      <div style={{ width: 340, background: '#0d1117', padding: '40px 0', textAlign: 'center', color: '#334155', fontSize: 13, fontFamily: 'Inter,sans-serif' }}>
         Loading…
       </div>
     )
@@ -192,11 +187,11 @@ export default function Popup() {
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
 
   return (
-    <div style={{ width: 340, background: '#070711', fontFamily: 'Inter,sans-serif' }}>
+    <div style={{ width: 340, background: '#0d1117', fontFamily: 'Inter,sans-serif' }}>
 
       {/* Header */}
       <div style={{
-        background: 'linear-gradient(135deg, rgba(99,102,241,0.14) 0%, rgba(139,92,246,0.07) 100%)',
+        background: 'linear-gradient(135deg, rgba(6,182,212,0.12) 0%, rgba(14,165,233,0.06) 100%)',
         borderBottom: '1px solid rgba(255,255,255,0.07)',
         padding: '14px 16px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -204,10 +199,10 @@ export default function Popup() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{
             width: 32, height: 32, borderRadius: 10, flexShrink: 0,
-            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+            background: 'linear-gradient(135deg, #06b6d4, #0ea5e9)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 15, fontWeight: 800, color: '#fff',
-            boxShadow: '0 4px 12px rgba(99,102,241,0.4)',
+            boxShadow: '0 4px 12px rgba(6,182,212,0.4)',
           }}>S</div>
           <div>
             <div style={{ fontSize: 12, fontWeight: 700, color: '#f1f5f9' }}>{greeting}, {userName}!</div>
@@ -215,8 +210,8 @@ export default function Popup() {
           </div>
         </div>
         <button onClick={openDashboard} style={{
-          background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.3)',
-          color: '#818cf8', borderRadius: 8, padding: '4px 10px',
+          background: 'rgba(6,182,212,0.12)', border: '1px solid rgba(6,182,212,0.3)',
+          color: '#38bdf8', borderRadius: 8, padding: '4px 10px',
           fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
           fontFamily: 'Inter,sans-serif',
         }}>
@@ -228,14 +223,14 @@ export default function Popup() {
 
         {/* Daily Quote */}
         <div style={{
-          background: 'rgba(99,102,241,0.07)', border: '1px solid rgba(99,102,241,0.15)',
+          background: 'rgba(6,182,212,0.06)', border: '1px solid rgba(6,182,212,0.14)',
           borderRadius: 12, padding: '11px 14px', marginBottom: 14,
         }}>
-          <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.08em', color: '#4f46e5', marginBottom: 5 }}>✨ Daily Quote</div>
-          <p style={{ fontSize: 12, color: '#a5b4fc', fontStyle: 'italic', margin: '0 0 4px', lineHeight: 1.5 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.08em', color: '#0891b2', marginBottom: 5 }}>✨ Daily Quote</div>
+          <p style={{ fontSize: 12, color: '#67e8f9', fontStyle: 'italic', margin: '0 0 4px', lineHeight: 1.5 }}>
             "{quote.text}"
           </p>
-          <p style={{ fontSize: 10, color: '#4f46e5', margin: 0, fontWeight: 600 }}>— {quote.author}</p>
+          <p style={{ fontSize: 10, color: '#0891b2', margin: 0, fontWeight: 600 }}>— {quote.author}</p>
         </div>
 
         {/* Focus Timer */}
@@ -336,9 +331,9 @@ export default function Popup() {
       <div style={{ padding: '0 16px 14px' }}>
         <button onClick={openDashboard} style={{
           width: '100%', padding: '10px 0', borderRadius: 10, border: 'none',
-          background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+          background: 'linear-gradient(135deg, #06b6d4, #0ea5e9)',
           color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer',
-          boxShadow: '0 4px 16px rgba(99,102,241,0.35)',
+          boxShadow: '0 4px 16px rgba(6,182,212,0.35)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
           fontFamily: 'Inter,sans-serif',
         }}>

@@ -10,10 +10,10 @@ interface TimerData {
 }
 
 const PRESETS = [
-  { label: 'Pomodoro',  ms: 25 * 60_000, desc: '25 min focus block' },
+  { label: 'Pomodoro',    ms: 25 * 60_000, desc: '25 min focus block' },
   { label: 'Short Focus', ms: 45 * 60_000, desc: '45 min session' },
-  { label: 'Deep Work', ms: 90 * 60_000, desc: '90 min deep focus' },
-  { label: 'Power Hour', ms: 60 * 60_000, desc: '60 min power session' },
+  { label: 'Deep Work',   ms: 90 * 60_000, desc: '90 min deep focus' },
+  { label: 'Power Hour',  ms: 60 * 60_000, desc: '60 min power session' },
 ]
 
 const QUICK = [5, 10, 15, 20, 25, 30, 45, 60, 90]
@@ -33,8 +33,8 @@ function BigRing({ pct, done, ms }: { pct: number; done: boolean; ms: number }) 
   const size = 240, r = 102, stroke = 12
   const circ = 2 * Math.PI * r
   const offset = circ * (1 - Math.max(0, Math.min(1, pct)))
-  const color  = done ? '#10b981' : '#6366f1'
-  const color2 = done ? '#34d399' : '#8b5cf6'
+  const color  = done ? '#10b981' : '#06b6d4'
+  const color2 = done ? '#34d399' : '#0ea5e9'
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
       <defs>
@@ -88,7 +88,6 @@ export default function TimerTab() {
 
   useEffect(() => {
     sync()
-    // Count sessions today from chrome.storage.local (we store completions there)
     chrome.storage.local.get('timerSessions', r => {
       const today = new Date().toISOString().slice(0, 10)
       setSessionsToday((r.timerSessions ?? {})[today] ?? 0)
@@ -151,9 +150,9 @@ export default function TimerTab() {
           {(running || done) && (
             <div style={{
               padding: '5px 14px', borderRadius: 99, fontSize: 11, fontWeight: 700,
-              background: done ? 'rgba(16,185,129,0.15)' : 'rgba(99,102,241,0.2)',
-              color: done ? '#10b981' : '#a5b4fc',
-              border: `1px solid ${done ? 'rgba(16,185,129,0.3)' : 'rgba(99,102,241,0.3)'}`,
+              background: done ? 'rgba(16,185,129,0.15)' : 'rgba(6,182,212,0.15)',
+              color: done ? '#10b981' : '#67e8f9',
+              border: `1px solid ${done ? 'rgba(16,185,129,0.3)' : 'rgba(6,182,212,0.3)'}`,
             }}>
               {done ? '🎉 Session Complete' : `⏱ ${data?.label ?? 'Focus'} · In Progress`}
             </div>
@@ -171,7 +170,7 @@ export default function TimerTab() {
               </div>
               <div>
                 <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.08em', color: '#334155' }}>Progress</div>
-                <div style={{ fontSize: 16, fontWeight: 800, color: '#818cf8', letterSpacing: '-0.02em', marginTop: 2 }}>{elapsedPct}%</div>
+                <div style={{ fontSize: 16, fontWeight: 800, color: '#38bdf8', letterSpacing: '-0.02em', marginTop: 2 }}>{elapsedPct}%</div>
               </div>
               <div>
                 <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.08em', color: '#334155' }}>Total</div>
@@ -184,7 +183,7 @@ export default function TimerTab() {
           <div style={{ width: '100%', height: 4, background: 'rgba(255,255,255,0.05)', borderRadius: 99, overflow: 'hidden' }}>
             <div style={{
               height: '100%', borderRadius: 99, width: `${elapsedPct}%`,
-              background: done ? 'linear-gradient(90deg,#10b981,#34d399)' : 'linear-gradient(90deg,#6366f1,#8b5cf6)',
+              background: done ? 'linear-gradient(90deg,#10b981,#34d399)' : 'linear-gradient(90deg,#06b6d4,#0ea5e9)',
               transition: 'width 0.9s cubic-bezier(0.4,0,0.2,1)',
             }} />
           </div>
@@ -200,9 +199,9 @@ export default function TimerTab() {
                   ? 'rgba(249,115,22,0.15)'
                   : done
                     ? 'linear-gradient(135deg,#10b981,#34d399)'
-                    : 'linear-gradient(135deg,#6366f1,#8b5cf6)',
+                    : 'linear-gradient(135deg,#06b6d4,#0ea5e9)',
                 color: running ? '#fb923c' : '#fff',
-                boxShadow: running ? 'none' : done ? '0 4px 16px rgba(16,185,129,0.3)' : '0 4px 16px rgba(99,102,241,0.35)',
+                boxShadow: running ? 'none' : done ? '0 4px 16px rgba(16,185,129,0.3)' : '0 4px 16px rgba(6,182,212,0.35)',
                 transition: 'all 0.2s',
                 letterSpacing: '-0.01em',
               }}
@@ -241,17 +240,17 @@ export default function TimerTab() {
                       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                       padding: '12px 16px', borderRadius: 12, border: 'none', cursor: running ? 'default' : 'pointer',
                       fontFamily: 'Inter,sans-serif', textAlign: 'left' as const,
-                      background: active ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.04)',
-                      boxShadow: active ? 'inset 0 0 0 1px rgba(99,102,241,0.4)' : 'inset 0 0 0 1px rgba(255,255,255,0.06)',
+                      background: active ? 'rgba(6,182,212,0.15)' : 'rgba(255,255,255,0.04)',
+                      boxShadow: active ? 'inset 0 0 0 1px rgba(6,182,212,0.4)' : 'inset 0 0 0 1px rgba(255,255,255,0.06)',
                       transition: 'all 0.15s', opacity: running ? 0.5 : 1,
                     }}
                   >
                     <div>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: active ? '#a5b4fc' : '#e2e8f0' }}>{p.label}</div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: active ? '#67e8f9' : '#e2e8f0' }}>{p.label}</div>
                       <div style={{ fontSize: 11, color: '#475569', marginTop: 2 }}>{p.desc}</div>
                     </div>
                     <div style={{
-                      fontSize: 13, fontWeight: 800, color: active ? '#818cf8' : '#334155',
+                      fontSize: 13, fontWeight: 800, color: active ? '#38bdf8' : '#334155',
                       letterSpacing: '-0.02em',
                     }}>{p.ms / 60_000}m</div>
                   </button>
@@ -272,9 +271,9 @@ export default function TimerTab() {
                     style={{
                       padding: '7px 14px', borderRadius: 99, border: 'none', cursor: running ? 'default' : 'pointer',
                       fontFamily: 'Inter,sans-serif', fontSize: 12, fontWeight: 700,
-                      background: active ? 'linear-gradient(135deg,#6366f1,#8b5cf6)' : 'rgba(255,255,255,0.05)',
+                      background: active ? 'linear-gradient(135deg,#06b6d4,#0ea5e9)' : 'rgba(255,255,255,0.05)',
                       color: active ? '#fff' : '#64748b',
-                      boxShadow: active ? '0 2px 8px rgba(99,102,241,0.3)' : 'none',
+                      boxShadow: active ? '0 2px 8px rgba(6,182,212,0.3)' : 'none',
                       opacity: running ? 0.5 : 1, transition: 'all 0.15s',
                     }}
                   >{min}m</button>
@@ -302,12 +301,12 @@ export default function TimerTab() {
                   opacity: running ? 0.5 : 1,
                   transition: 'border-color 0.2s',
                 }}
-                onFocus={e => (e.target.style.borderColor = 'rgba(99,102,241,0.5)')}
+                onFocus={e => (e.target.style.borderColor = 'rgba(6,182,212,0.5)')}
                 onBlur={e => (e.target.style.borderColor = 'rgba(255,255,255,0.1)')}
               />
               <button onClick={handleCustom} disabled={!customMin || running} style={{
                 padding: '10px 16px', borderRadius: 10, border: 'none', cursor: customMin && !running ? 'pointer' : 'default',
-                background: customMin && !running ? 'linear-gradient(135deg,#6366f1,#8b5cf6)' : 'rgba(255,255,255,0.06)',
+                background: customMin && !running ? 'linear-gradient(135deg,#06b6d4,#0ea5e9)' : 'rgba(255,255,255,0.06)',
                 color: customMin && !running ? '#fff' : '#334155',
                 fontSize: 13, fontWeight: 700, fontFamily: 'Inter,sans-serif',
                 transition: 'all 0.2s',
@@ -316,8 +315,8 @@ export default function TimerTab() {
           </div>
 
           {/* Tips */}
-          <div style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)', borderRadius: 18, padding: 20 }}>
-            <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.08em', color: '#4f46e5', marginBottom: 12 }}>💡 Timer Tips</div>
+          <div style={{ background: 'rgba(6,182,212,0.06)', border: '1px solid rgba(6,182,212,0.14)', borderRadius: 18, padding: 20 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.08em', color: '#0891b2', marginBottom: 12 }}>💡 Timer Tips</div>
             <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 8 }}>
               {[
                 '25 min sessions with 5 min breaks (Pomodoro) maximize retention',
@@ -326,7 +325,7 @@ export default function TimerTab() {
                 'Use the Break Reminder in Settings as a safety net',
               ].map((tip, i) => (
                 <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                  <span style={{ color: '#4f46e5', fontWeight: 700, flexShrink: 0 }}>{i + 1}.</span>
+                  <span style={{ color: '#0891b2', fontWeight: 700, flexShrink: 0 }}>{i + 1}.</span>
                   <span style={{ fontSize: 12, color: '#64748b', lineHeight: 1.5 }}>{tip}</span>
                 </div>
               ))}

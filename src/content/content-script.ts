@@ -26,7 +26,7 @@ document.addEventListener('mouseup', () => {
     top: ${rect.top + window.scrollY - 42}px;
     left: ${rect.left + rect.width / 2}px;
     transform: translateX(-50%);
-    background: #4f65f8;
+    background: #06b6d4;
     color: #fff;
     padding: 6px 12px;
     border-radius: 6px;

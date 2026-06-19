@@ -26,8 +26,8 @@ function Ring({ pct, done, size = 80 }: { pct: number; done: boolean; size?: num
   const r = size / 2 - 6
   const circ = 2 * Math.PI * r
   const offset = circ * (1 - pct)
-  const color = done ? '#10b981' : '#6366f1'
-  const color2 = done ? '#34d399' : '#8b5cf6'
+  const color = done ? '#10b981' : '#06b6d4'
+  const color2 = done ? '#34d399' : '#0ea5e9'
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ flexShrink: 0 }}>
       <defs>
@@ -53,7 +53,6 @@ export default function TimerWidget() {
   const [localMs, setLocalMs] = useState<number>(25 * 60_000)
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  // Load state from background
   const sync = async () => {
     const res: TimerData = await chrome.runtime.sendMessage({ type: 'GET_TIMER' })
     setData(res)
@@ -63,7 +62,6 @@ export default function TimerWidget() {
 
   useEffect(() => { sync() }, [])
 
-  // Local tick when running so display updates every second without re-fetching
   useEffect(() => {
     if (tickRef.current) clearInterval(tickRef.current)
     if (data?.running) {
@@ -102,11 +100,11 @@ export default function TimerWidget() {
 
   return (
     <div style={{
-      background: 'rgba(99,102,241,0.07)',
-      border: '1px solid rgba(99,102,241,0.18)',
+      background: 'rgba(6,182,212,0.07)',
+      border: '1px solid rgba(6,182,212,0.18)',
       borderRadius: 14, padding: '12px 14px', marginBottom: 14,
     }}>
-      <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.08em', color: '#4f46e5', marginBottom: 10 }}>
+      <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.08em', color: '#0891b2', marginBottom: 10 }}>
         ⏱ {done ? 'Complete!' : running ? `${data.label} Timer` : 'Focus Timer'}
       </div>
 
@@ -133,8 +131,8 @@ export default function TimerWidget() {
                 <button key={p.label} onClick={() => setPreset(p.ms, p.label)} style={{
                   padding: '3px 9px', borderRadius: 99, border: 'none', cursor: 'pointer',
                   fontFamily: 'Inter,sans-serif', fontSize: 10, fontWeight: 700,
-                  background: data.totalMs === p.ms ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.06)',
-                  color: data.totalMs === p.ms ? '#a5b4fc' : '#64748b',
+                  background: data.totalMs === p.ms ? 'rgba(6,182,212,0.3)' : 'rgba(255,255,255,0.06)',
+                  color: data.totalMs === p.ms ? '#67e8f9' : '#64748b',
                   transition: 'all 0.15s',
                 }}>
                   {p.label} · {p.ms / 60_000}m
@@ -150,9 +148,9 @@ export default function TimerWidget() {
               style={{
                 flex: 1, padding: '7px 0', borderRadius: 8, border: 'none', cursor: 'pointer',
                 fontFamily: 'Inter,sans-serif', fontSize: 12, fontWeight: 700,
-                background: running ? 'rgba(249,115,22,0.2)' : 'linear-gradient(135deg,#6366f1,#8b5cf6)',
+                background: running ? 'rgba(249,115,22,0.2)' : 'linear-gradient(135deg,#06b6d4,#0ea5e9)',
                 color: running ? '#fb923c' : '#fff',
-                boxShadow: running ? 'none' : '0 2px 8px rgba(99,102,241,0.3)',
+                boxShadow: running ? 'none' : '0 2px 8px rgba(6,182,212,0.3)',
                 transition: 'all 0.15s',
               }}
             >
@@ -173,7 +171,7 @@ export default function TimerWidget() {
         <div style={{ height: 3, background: 'rgba(255,255,255,0.05)', borderRadius: 99, marginTop: 10, overflow: 'hidden' }}>
           <div style={{
             height: '100%', borderRadius: 99,
-            background: done ? 'linear-gradient(90deg,#10b981,#34d399)' : 'linear-gradient(90deg,#6366f1,#8b5cf6)',
+            background: done ? 'linear-gradient(90deg,#10b981,#34d399)' : 'linear-gradient(90deg,#06b6d4,#0ea5e9)',
             width: `${pct * 100}%`,
             transition: 'width 0.9s cubic-bezier(0.4,0,0.2,1)',
           }} />

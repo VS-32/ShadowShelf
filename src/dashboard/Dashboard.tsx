@@ -24,11 +24,11 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<Tab>('home')
 
   return (
-    <div style={{ minHeight: '100vh', background: '#070711', display: 'flex', fontFamily: 'Inter,sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: '#0d1117', display: 'flex', fontFamily: 'Inter,sans-serif' }}>
 
       {/* Sidebar */}
       <aside style={{
-        width: 220, background: '#0a0a17',
+        width: 220, background: '#010409',
         borderRight: '1px solid rgba(255,255,255,0.06)',
         display: 'flex', flexDirection: 'column',
         position: 'fixed', height: '100%', zIndex: 10,
@@ -38,10 +38,10 @@ export default function Dashboard() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
             <div style={{
               width: 38, height: 38, borderRadius: 12,
-              background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+              background: 'linear-gradient(135deg, #06b6d4, #0ea5e9)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: 18, fontWeight: 800, color: '#fff',
-              boxShadow: '0 4px 16px rgba(99,102,241,0.4)',
+              boxShadow: '0 4px 16px rgba(6,182,212,0.4)',
               flexShrink: 0,
             }}>S</div>
             <div>
@@ -63,14 +63,14 @@ export default function Dashboard() {
                   display: 'flex', alignItems: 'center', gap: 10,
                   padding: '9px 12px', borderRadius: 10, border: 'none',
                   background: active
-                    ? 'linear-gradient(135deg, rgba(99,102,241,0.25), rgba(139,92,246,0.15))'
+                    ? 'linear-gradient(135deg, rgba(6,182,212,0.2), rgba(14,165,233,0.12))'
                     : 'transparent',
-                  color: active ? '#a5b4fc' : '#64748b',
+                  color: active ? '#67e8f9' : '#64748b',
                   fontSize: 13, fontWeight: active ? 600 : 500,
                   cursor: 'pointer', width: '100%', textAlign: 'left',
                   transition: 'all 0.15s',
                   position: 'relative',
-                  boxShadow: active ? 'inset 0 0 0 1px rgba(99,102,241,0.3)' : 'none',
+                  boxShadow: active ? 'inset 0 0 0 1px rgba(6,182,212,0.3)' : 'none',
                 }}
                 onMouseEnter={e => { if (!active) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.04)'; if (!active) (e.currentTarget as HTMLButtonElement).style.color = '#94a3b8' }}
                 onMouseLeave={e => { if (!active) (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; if (!active) (e.currentTarget as HTMLButtonElement).style.color = '#64748b' }}
@@ -78,7 +78,7 @@ export default function Dashboard() {
                 {active && (
                   <div style={{
                     position: 'absolute', left: 0, top: '20%', width: 3, height: '60%',
-                    background: 'linear-gradient(180deg, #6366f1, #8b5cf6)',
+                    background: 'linear-gradient(180deg, #06b6d4, #0ea5e9)',
                     borderRadius: '0 3px 3px 0',
                   }} />
                 )}

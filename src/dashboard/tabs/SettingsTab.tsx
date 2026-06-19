@@ -43,9 +43,9 @@ function Toggle({ label, description, value, onChange }: {
       </div>
       <button onClick={() => onChange(!value)} style={{
         width: 44, height: 24, borderRadius: 99, border: 'none', cursor: 'pointer',
-        background: value ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : 'rgba(255,255,255,0.08)',
+        background: value ? 'linear-gradient(135deg, #06b6d4, #0ea5e9)' : 'rgba(255,255,255,0.08)',
         position: 'relative', flexShrink: 0, transition: 'background 0.2s',
-        boxShadow: value ? '0 2px 8px rgba(99,102,241,0.4)' : 'none',
+        boxShadow: value ? '0 2px 8px rgba(6,182,212,0.4)' : 'none',
       }}>
         <div style={{
           position: 'absolute', top: 2, left: value ? 22 : 2,
@@ -146,7 +146,7 @@ export default function SettingsTab() {
               outline: 'none', fontFamily: 'Inter,sans-serif', boxSizing: 'border-box' as const,
               transition: 'border-color 0.2s',
             }}
-            onFocus={e => (e.target.style.borderColor = 'rgba(99,102,241,0.5)')}
+            onFocus={e => (e.target.style.borderColor = 'rgba(6,182,212,0.5)')}
             onBlur={e => (e.target.style.borderColor = 'rgba(255,255,255,0.1)')}
           />
         </div>
@@ -189,7 +189,7 @@ export default function SettingsTab() {
       {/* Storage */}
       <Section title="Storage">
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 14 }}>
-          {[{ label: 'Page Visits', count: counts.visits, color: '#6366f1' }, { label: 'Highlights', count: counts.highlights, color: '#8b5cf6' }, { label: 'Clipboard', count: counts.clipboard, color: '#22d3ee' }]
+          {[{ label: 'Page Visits', count: counts.visits, color: '#06b6d4' }, { label: 'Highlights', count: counts.highlights, color: '#8b5cf6' }, { label: 'Clipboard', count: counts.clipboard, color: '#22d3ee' }]
             .map(({ label, count, color }) => (
               <div key={label} style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.06)', padding: '14px 16px' }}>
                 <div style={{ fontSize: 22, fontWeight: 800, color, letterSpacing: '-0.03em' }}>{count}</div>
@@ -214,7 +214,7 @@ export default function SettingsTab() {
         </button>
       </Section>
 
-      <button onClick={save} style={{ width: '100%', padding: '13px 0', borderRadius: 12, border: 'none', background: saved ? 'linear-gradient(135deg, #10b981, #34d399)' : 'linear-gradient(135deg, #6366f1, #8b5cf6)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter,sans-serif', boxShadow: saved ? '0 4px 16px rgba(16,185,129,0.35)' : '0 4px 16px rgba(99,102,241,0.35)', transition: 'all 0.3s' }}>
+      <button onClick={save} style={{ width: '100%', padding: '13px 0', borderRadius: 12, border: 'none', background: saved ? 'linear-gradient(135deg, #10b981, #34d399)' : 'linear-gradient(135deg, #06b6d4, #0ea5e9)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter,sans-serif', boxShadow: saved ? '0 4px 16px rgba(16,185,129,0.35)' : '0 4px 16px rgba(6,182,212,0.35)', transition: 'all 0.3s' }}>
         {saved ? '✓  Settings Saved' : 'Save Settings'}
       </button>
 

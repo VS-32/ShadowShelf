@@ -29,12 +29,12 @@ export default function Dropdown({ value, onChange, options }: Props) {
         style={{
           width: '100%', padding: '9px 14px',
           background: 'rgba(255,255,255,0.06)',
-          border: open ? '1px solid rgba(99,102,241,0.6)' : '1px solid rgba(255,255,255,0.12)',
+          border: open ? '1px solid rgba(6,182,212,0.6)' : '1px solid rgba(255,255,255,0.12)',
           borderRadius: 10, color: '#f1f5f9', fontSize: 13,
           fontFamily: 'Inter,sans-serif', cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
           transition: 'border-color 0.2s',
-          boxShadow: open ? '0 0 0 3px rgba(99,102,241,0.15)' : 'none',
+          boxShadow: open ? '0 0 0 3px rgba(6,182,212,0.15)' : 'none',
         }}
       >
         <span>{selected?.label ?? '—'}</span>
@@ -50,7 +50,7 @@ export default function Dropdown({ value, onChange, options }: Props) {
       {open && (
         <div style={{
           position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0, zIndex: 50,
-          background: '#13131f',
+          background: '#0d1117',
           border: '1px solid rgba(255,255,255,0.12)',
           borderRadius: 12,
           boxShadow: '0 16px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05)',
@@ -67,11 +67,11 @@ export default function Dropdown({ value, onChange, options }: Props) {
                   display: 'block', width: '100%', textAlign: 'left',
                   padding: '10px 14px', border: 'none', cursor: 'pointer',
                   fontFamily: 'Inter,sans-serif', fontSize: 13,
-                  background: active ? 'rgba(99,102,241,0.2)' : 'transparent',
-                  color: active ? '#a5b4fc' : '#94a3b8',
+                  background: active ? 'rgba(6,182,212,0.2)' : 'transparent',
+                  color: active ? '#67e8f9' : '#94a3b8',
                   fontWeight: active ? 700 : 400,
                   transition: 'background 0.12s, color 0.12s',
-                  borderLeft: active ? '2px solid #6366f1' : '2px solid transparent',
+                  borderLeft: active ? '2px solid #06b6d4' : '2px solid transparent',
                 }}
                 onMouseEnter={e => { if (!active) { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.05)'; (e.currentTarget as HTMLButtonElement).style.color = '#f1f5f9' } }}
                 onMouseLeave={e => { if (!active) { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = '#94a3b8' } }}

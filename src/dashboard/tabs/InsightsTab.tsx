@@ -11,9 +11,9 @@ import type { Category } from '../../types'
 ChartJS.register(ArcElement, CategoryScale, LinearScale, BarElement, Tooltip, Legend)
 
 const CAT_COLOR: Record<Category, string> = {
-  Learning: '#6366f1', Work: '#10b981', Entertainment: '#8b5cf6',
+  Learning: '#06b6d4', Work: '#10b981', Entertainment: '#8b5cf6',
   'Social Media': '#ec4899', Shopping: '#f97316', Finance: '#eab308',
-  News: '#22d3ee', Other: '#64748b',
+  News: '#3b82f6', Other: '#64748b',
 }
 
 function KpiCard({ label, value, sub, glow }: { label: string; value: string; sub: string; glow?: string }) {
@@ -32,7 +32,7 @@ function KpiCard({ label, value, sub, glow }: { label: string; value: string; su
 }
 
 const DARK_TOOLTIP = {
-  backgroundColor: '#0f0f1a',
+  backgroundColor: '#0d1117',
   borderColor: 'rgba(255,255,255,0.1)',
   borderWidth: 1,
   titleColor: '#94a3b8',
@@ -77,7 +77,7 @@ export default function InsightsTab() {
       label: 'Minutes Online',
       data: weekData.totals.map(s => Math.round(s / 60)),
       backgroundColor: weekData.days.map((_, i) =>
-        i === 0 ? '#6366f1' : 'rgba(99,102,241,0.35)'
+        i === 0 ? '#06b6d4' : 'rgba(6,182,212,0.3)'
       ),
       borderRadius: 8,
       borderSkipped: false,
@@ -97,7 +97,7 @@ export default function InsightsTab() {
 
       {/* KPI row */}
       <div style={{ display: 'flex', gap: 16, marginBottom: 24 }}>
-        <KpiCard label="Weekly Focus Score" value={`${avgFocus}`} sub="Average across 7 days" glow="#6366f1" />
+        <KpiCard label="Weekly Focus Score" value={`${avgFocus}`} sub="Average across 7 days" glow="#06b6d4" />
         <KpiCard label="This Week Total" value={formatDuration(totalWeek)} sub="All browsing time" />
         <KpiCard label="Daily Average" value={formatDuration(Math.round(totalWeek / 7))} sub="Per day this week" />
         {bestDay && (
@@ -166,7 +166,7 @@ export default function InsightsTab() {
           <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', height: 100 }}>
             {weekData.days.map((d, i) => {
               const score = weekData.focusScores[i]
-              const color = score >= 70 ? '#10b981' : score >= 40 ? '#6366f1' : '#f97316'
+              const color = score >= 70 ? '#10b981' : score >= 40 ? '#06b6d4' : '#f97316'
               const isToday = i === 0
               return (
                 <div key={d} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
@@ -191,7 +191,7 @@ export default function InsightsTab() {
             })}
           </div>
           <div style={{ display: 'flex', gap: 16, marginTop: 16, paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-            {[{ label: 'High Focus (70+)', color: '#10b981' }, { label: 'Moderate (40–70)', color: '#6366f1' }, { label: 'Low Focus (<40)', color: '#f97316' }].map(({ label, color }) => (
+            {[{ label: 'High Focus (70+)', color: '#10b981' }, { label: 'Moderate (40–70)', color: '#06b6d4' }, { label: 'Low Focus (<40)', color: '#f97316' }].map(({ label, color }) => (
               <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: color }} />
                 <span style={{ fontSize: 11, color: '#475569' }}>{label}</span>
