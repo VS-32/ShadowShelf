@@ -37,6 +37,11 @@ let timer: TimerState = {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+function localDateStr(ms?: number) {
+  const d = ms !== undefined ? new Date(ms) : new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
 function timerRemainingMs(): number {
   if (!timer.running || timer.startedAt === null) return timer.remainingMs
   return Math.max(0, timer.remainingMs - (Date.now() - timer.startedAt))
@@ -83,7 +88,10 @@ async function recoverState() {
       if (Math.round((now - prev.startTime) / 1000) >= 3) {
         await commitVisit(prev, now)
       }
-      activeSession = { ...prev, startTime: now }
+      // Only restore if a concurrent event handler hasn't already started a fresh session
+      if (!activeSession) {
+        activeSession = { ...prev, startTime: now }
+      }
     }
   } catch { /* chrome.storage.session not available (Chrome < 102) */ }
 }
@@ -95,7 +103,7 @@ async function commitVisit(session: Session, endTime: number) {
   if (duration < 3) return
   const domain   = extractDomain(session.url)
   const category = categorize(session.url, session.title)
-  const date     = new Date(session.startTime).toISOString().slice(0, 10)
+  const date     = localDateStr(session.startTime)
   const visit: PageVisit = { url: session.url, title: session.title, domain, category, startTime: session.startTime, endTime, duration, date }
   await db.visits.add(visit)
   markActivity()
@@ -128,7 +136,7 @@ function markActivity() {
 
 async function checkBreak() {
   if (!continuousStart) return
-  const res = await chrome.storage.local.get('breakIntervalMin')
+  const res = await chrome.storage.sync.get('breakIntervalMin')
   const intervalMs = (res.breakIntervalMin ?? 0) * 60_000
   if (!intervalMs) return
   const elapsed = Date.now() - continuousStart
@@ -156,16 +164,123 @@ chrome.notifications.onButtonClicked.addListener(async (id, btn) => {
     else { continuousStart = Date.now() - 15 * 60_000; breakNotified = false }
   }
   if (id === 'timer-done') {
-    timer.remainingMs = timer.totalMs; timer.running = false; timer.startedAt = null
+    if (btn === 0) {
+      // 5-min break
+      timer = { running: true, startedAt: Date.now(), remainingMs: 5 * 60_000, totalMs: 5 * 60_000, label: 'Break' }
+      scheduleTimerAlarm(5 * 60_000)
+      updateTimerBadge()
+    } else {
+      // Go again — restart same duration
+      timer = { running: true, startedAt: Date.now(), remainingMs: timer.totalMs, totalMs: timer.totalMs, label: timer.label }
+      scheduleTimerAlarm(timer.totalMs)
+      updateTimerBadge()
+    }
+    chrome.storage.local.set({ timerRunning: true })
   }
   await persistState()
 })
+
+// ── Streak tracking ───────────────────────────────────────────────────────────
+
+async function updateStreak() {
+  const today = localDateStr()
+  const res = await chrome.storage.local.get('focusStreak')
+  const s = res.focusStreak ?? { current: 0, longest: 0, lastDate: '' }
+  if (s.lastDate === today) return
+  const yesterday = localDateStr(Date.now() - 86400_000)
+  s.current = s.lastDate === yesterday ? s.current + 1 : 1
+  s.lastDate = today
+  s.longest = Math.max(s.longest, s.current)
+  await chrome.storage.local.set({ focusStreak: s })
+  if ([3, 7, 14, 30, 60, 100].includes(s.current)) {
+    chrome.notifications.create('streak-milestone', {
+      type: 'basic', iconUrl: 'icons/icon48.png',
+      title: `🔥 ${s.current}-Day Streak!`,
+      message: `Amazing! You've had focus sessions ${s.current} days in a row. Keep it up!`,
+      priority: 1,
+    })
+  }
+}
+
+// ── Category time limits ──────────────────────────────────────────────────────
+
+async function checkTimeLimits() {
+  const today = localDateStr()
+  const [syncRes, localRes] = await Promise.all([
+    chrome.storage.sync.get('categoryLimits'),
+    chrome.storage.local.get('timeLimitState'),
+  ])
+  const limits: Record<string, number> = syncRes.categoryLimits ?? {}
+  if (!Object.keys(limits).length) return
+
+  let state = localRes.timeLimitState ?? {}
+  if (state.date !== today) state = { date: today, notified: {} }
+
+  const visits = await db.visits.where('date').equals(today).toArray()
+  const usage: Record<string, number> = {}
+  for (const v of visits) usage[v.category] = (usage[v.category] ?? 0) + v.duration
+
+  let changed = false
+  for (const [cat, limitMin] of Object.entries(limits) as [string, number][]) {
+    if (!limitMin) continue
+    const usedSec = usage[cat] ?? 0
+    const limitSec = limitMin * 60
+    const pct = usedSec / limitSec
+    if (pct >= 1 && !state.notified?.[cat + '100']) {
+      state.notified = { ...state.notified, [cat + '100']: true }; changed = true
+      chrome.notifications.create(`limit-${cat}`, {
+        type: 'basic', iconUrl: 'icons/icon48.png',
+        title: `⏰ Daily Limit Reached`,
+        message: `You've used all ${limitMin} minutes of your daily ${cat} limit.`,
+        priority: 2,
+      })
+    } else if (pct >= 0.8 && !state.notified?.[cat + '80']) {
+      state.notified = { ...state.notified, [cat + '80']: true }; changed = true
+      chrome.notifications.create(`limit-warn-${cat}`, {
+        type: 'basic', iconUrl: 'icons/icon48.png',
+        title: `⚠️ Nearing ${cat} Limit`,
+        message: `You've used ${Math.round(usedSec / 60)} of ${limitMin} min today in ${cat}.`,
+        priority: 1,
+      })
+    }
+  }
+  if (changed) await chrome.storage.local.set({ timeLimitState: state })
+}
 
 // ── Timer helpers ─────────────────────────────────────────────────────────────
 
 function scheduleTimerAlarm(ms: number) {
   chrome.alarms.clear('timer-complete')
   if (ms > 0) chrome.alarms.create('timer-complete', { delayInMinutes: ms / 60_000 })
+}
+
+function updateTimerBadge() {
+  if (!timer.running) return
+  const remaining = timerRemainingMs()
+  const min = Math.ceil(remaining / 60_000)
+  chrome.action.setBadgeText({ text: min > 0 ? `${min}m` : '' })
+  chrome.action.setBadgeBackgroundColor({ color: '#06b6d4' })
+}
+
+async function incrementSessionCount() {
+  const today = localDateStr()
+  const res = await chrome.storage.local.get('timerSessions')
+  const sessions: Record<string, number> = res.timerSessions ?? {}
+  sessions[today] = (sessions[today] ?? 0) + 1
+  await chrome.storage.local.set({ timerSessions: sessions })
+}
+
+async function playTimerSound() {
+  const offscreen = (chrome as unknown as Record<string, any>).offscreen
+  if (!offscreen) return
+  try {
+    await offscreen.createDocument({
+      url: 'offscreen.html',
+      reasons: ['AUDIO_PLAYBACK'],
+      justification: 'Focus session completion chime',
+    })
+  } catch { /* already open */ }
+  chrome.runtime.sendMessage({ type: 'PLAY_TIMER_SOUND' }).catch(() => {})
 }
 
 // ── Tab / window events ───────────────────────────────────────────────────────
@@ -215,38 +330,59 @@ chrome.idle.onStateChanged.addListener(async (state) => {
 
 // ── Alarms ────────────────────────────────────────────────────────────────────
 
-chrome.alarms.create('heartbeat',   { periodInMinutes: 0.5 })
-chrome.alarms.create('break-check', { periodInMinutes: 1   })
-chrome.alarms.create('daily-prune', { periodInMinutes: 1440 })
+// Alarms persist across service worker restarts — only create them once.
+// Recreating them on every SW wake-up resets their timers (breaking the heartbeat).
+async function ensureAlarms() {
+  const existing = await chrome.alarms.getAll()
+  const names = new Set(existing.map(a => a.name))
+  if (!names.has('heartbeat'))   chrome.alarms.create('heartbeat',   { periodInMinutes: 0.5  })
+  if (!names.has('break-check')) chrome.alarms.create('break-check', { periodInMinutes: 1    })
+  if (!names.has('daily-prune')) chrome.alarms.create('daily-prune', { periodInMinutes: 1440 })
+}
+
+chrome.runtime.onInstalled.addListener(ensureAlarms)
+chrome.runtime.onStartup.addListener(ensureAlarms)
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {
-  if (alarm.name === 'heartbeat' && activeSession) {
-    const now = Date.now()
-    await commitVisit(activeSession, now)
-    activeSession = { ...activeSession, startTime: now }
-    await persistState()
+  if (alarm.name === 'heartbeat') {
+    if (activeSession) {
+      const now = Date.now()
+      await commitVisit(activeSession, now)
+      activeSession = { ...activeSession, startTime: now }
+      await persistState()
+    }
+    updateTimerBadge()
   }
 
-  if (alarm.name === 'break-check') await checkBreak()
+  if (alarm.name === 'break-check') {
+    await checkBreak()
+    try { await checkTimeLimits() } catch { /* non-critical */ }
+  }
 
   if (alarm.name === 'daily-prune') {
     const today = new Date().toISOString().slice(0, 10)
     if (lastPruneDate === today) return
-    const res = await chrome.storage.local.get('retentionDays')
+    const res = await chrome.storage.sync.get('retentionDays')
     await pruneOldData(res.retentionDays ?? 30)
     lastPruneDate = today
     await persistState()
   }
 
   if (alarm.name === 'timer-complete') {
+    const completedLabel = timer.label
+    const completedMin   = Math.round(timer.totalMs / 60_000)
     timer = { ...timer, running: false, startedAt: null, remainingMs: 0 }
     await persistState()
+    await incrementSessionCount()
+    try { if (timer.totalMs >= 10 * 60_000) await updateStreak() } catch { /* non-critical */ }
+    await chrome.storage.local.set({ timerCompleted: Date.now(), timerRunning: false })
+    await playTimerSound()
     chrome.notifications.create('timer-done', {
       type: 'basic', iconUrl: 'icons/icon48.png',
-      title: `⏱ ${timer.label} Complete!`,
-      message: 'Great focus session! Time to take a short break.',
+      title: `✅ ${completedLabel} Complete!`,
+      message: `Excellent! You stayed focused for ${completedMin} minute${completedMin !== 1 ? 's' : ''}. Time for a well-earned break.`,
       priority: 2,
-      buttons: [{ title: 'Start a break' }],
+      buttons: [{ title: '☕ 5-min break' }, { title: '🔁 Go again' }],
     })
     chrome.action.setBadgeText({ text: '✓' })
     chrome.action.setBadgeBackgroundColor({ color: '#10b981' })
@@ -256,6 +392,11 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 // ── Messages ──────────────────────────────────────────────────────────────────
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+  if (msg.type === 'OFFSCREEN_DONE') {
+    const offscreen = (chrome as unknown as Record<string, any>).offscreen
+    offscreen?.closeDocument().catch(() => {})
+    return
+  }
   if (msg.type === 'SAVE_HIGHLIGHT') {
     db.highlights.add(msg.payload).then(() => sendResponse({ ok: true })); return true
   }
@@ -286,11 +427,19 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     return true
   }
   if (msg.type === 'START_TIMER') {
-    if (msg.totalMs) { timer.totalMs = msg.totalMs; timer.remainingMs = msg.totalMs }
-    if (msg.label)   timer.label = msg.label
+    if (msg.totalMs) {
+      timer.totalMs     = msg.totalMs
+      timer.remainingMs = msg.totalMs
+    } else if (timer.remainingMs === 0) {
+      // Called with no args after completion — restart from full duration
+      timer.remainingMs = timer.totalMs
+    }
+    if (msg.label) timer.label = msg.label
     timer.running   = true
     timer.startedAt = Date.now()
     scheduleTimerAlarm(timerRemainingMs())
+    updateTimerBadge()
+    chrome.storage.local.set({ timerRunning: true })
     persistState(); sendResponse({ ok: true })
     return true
   }
@@ -299,6 +448,8 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     timer.running   = false
     timer.startedAt = null
     chrome.alarms.clear('timer-complete')
+    chrome.action.setBadgeText({ text: '' })
+    chrome.storage.local.set({ timerRunning: false })
     persistState(); sendResponse({ ok: true })
     return true
   }
@@ -308,6 +459,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     timer.startedAt = null
     chrome.alarms.clear('timer-complete')
     chrome.action.setBadgeText({ text: '' })
+    chrome.storage.local.set({ timerRunning: false })
     persistState(); sendResponse({ ok: true })
     return true
   }

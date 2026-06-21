@@ -36,14 +36,9 @@ export default function Dashboard() {
         {/* Brand */}
         <div style={{ padding: '22px 18px 18px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
-            <div style={{
-              width: 38, height: 38, borderRadius: 12,
-              background: 'linear-gradient(135deg, #06b6d4, #0ea5e9)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 18, fontWeight: 800, color: '#fff',
-              boxShadow: '0 4px 16px rgba(6,182,212,0.4)',
-              flexShrink: 0,
-            }}>S</div>
+            <div style={{ width: 38, height: 38, flexShrink: 0, boxShadow: '0 4px 16px rgba(6,182,212,0.4)', borderRadius: 10, overflow: 'hidden' }}>
+              <img src="/icons/icon48.png" alt="ShadowShelf" style={{ width: '100%', height: '100%', display: 'block' }} />
+            </div>
             <div>
               <div style={{ fontWeight: 700, fontSize: 14, color: '#f1f5f9', letterSpacing: '-0.02em' }}>ShadowShelf</div>
               <div style={{ fontSize: 10, color: '#475569', marginTop: 1 }}>Your Digital Mirror</div>

@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite build --watch",
-    "build": "node scripts/generate-icons.mjs && vite build",
+    "build": "node scripts/generate-icons.mjs && vite build && vite build --config vite.config.content.ts",
     "preview": "vite preview"
   },
   "dependencies": {

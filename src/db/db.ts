@@ -18,9 +18,14 @@ export class ShadowShelfDB extends Dexie {
 
 export const db = new ShadowShelfDB()
 
+function localDateStr(ms?: number) {
+  const d = ms !== undefined ? new Date(ms) : new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
 export async function pruneOldData(retentionDays: number = 30) {
   const cutoff = Date.now() - retentionDays * 86400_000
-  const cutoffDate = new Date(cutoff).toISOString().slice(0, 10)
+  const cutoffDate = localDateStr(cutoff)
   await db.visits.where('date').below(cutoffDate).delete()
   await db.highlights.where('date').below(cutoffDate).delete()
   await db.clipboard.where('date').below(cutoffDate).delete()
@@ -34,7 +39,7 @@ export async function pruneOldData(retentionDays: number = 30) {
 }
 
 export async function getTodayStats() {
-  const today = new Date().toISOString().slice(0, 10)
+  const today = localDateStr()
   const visits = await db.visits.where('date').equals(today).toArray()
   const totalTime = visits.reduce((s, v) => s + v.duration, 0)
   const breakdown: Record<string, number> = {}
@@ -47,8 +52,7 @@ export async function getTodayStats() {
 export async function getWeekStats() {
   const days: string[] = []
   for (let i = 6; i >= 0; i--) {
-    const d = new Date(Date.now() - i * 86400_000)
-    days.push(d.toISOString().slice(0, 10))
+    days.push(localDateStr(Date.now() - i * 86400_000))
   }
   const visits = await db.visits.where('date').anyOf(days).toArray()
   const byDay: Record<string, typeof visits> = {}

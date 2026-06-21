@@ -46,6 +46,8 @@ function StatCard({ label, value, sub, accent }: { label: string; value: string;
   )
 }
 
+interface LimitWarning { category: string; used: number; limit: number; pct: number }
+
 export default function HomeTab() {
   const [stats, setStats] = useState<{
     totalTime: number; breakdown: Record<string, number>
@@ -55,11 +57,15 @@ export default function HomeTab() {
   const [profile, setProfile] = useState<ReturnType<typeof computeProfile> | null>(null)
   const [userName, setUserName] = useState('')
   const [breakStatus, setBreakStatus] = useState<{ elapsed: number; needed: boolean }>({ elapsed: 0, needed: false })
+  const [streak, setStreak] = useState<{ current: number; longest: number } | null>(null)
+  const [limitWarnings, setLimitWarnings] = useState<LimitWarning[]>([])
 
   const quote = getDailyQuote()
 
   useEffect(() => {
-    chrome.storage.local.get(['userName', 'breakIntervalMin'], async (stored) => {
+    chrome.storage.local.get(['focusStreak'], r => setStreak(r.focusStreak ?? null))
+
+    chrome.storage.sync.get(['userName', 'breakIntervalMin', 'categoryLimits'], async (stored) => {
       setUserName(stored.userName ?? '')
 
       const { visits, totalTime, breakdown } = await getTodayStats()
@@ -68,6 +74,18 @@ export default function HomeTab() {
       const topDomains = Object.entries(dm).sort((a, b) => b[1] - a[1]).slice(0, 6)
         .map(([domain, duration]) => ({ domain, duration }))
       setStats({ totalTime, breakdown, topDomains, focusScore: computeFocusScore(breakdown), visitCount: visits.length })
+
+      const limits: Record<string, number> = stored.categoryLimits ?? {}
+      const warnings: LimitWarning[] = Object.entries(limits)
+        .filter(([, min]) => min > 0)
+        .map(([cat, min]) => {
+          const used = Math.round((breakdown[cat] ?? 0) / 60)
+          const pct = min > 0 ? used / min : 0
+          return { category: cat, used, limit: min, pct }
+        })
+        .filter(w => w.pct >= 0.8)
+        .sort((a, b) => b.pct - a.pct)
+      setLimitWarnings(warnings)
 
       const cutoff = Date.now() - 7 * 86400_000
       const weekVisits: PageVisit[] = await db.visits.where('startTime').above(cutoff).toArray()
@@ -101,6 +119,55 @@ export default function HomeTab() {
         </h1>
         <p style={{ fontSize: 13, color: '#475569', margin: '4px 0 0', fontWeight: 500 }}>{today}</p>
       </div>
+
+      {/* Streak badge */}
+      {streak && streak.current > 0 && (
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 20,
+          background: 'linear-gradient(135deg, rgba(249,115,22,0.12), rgba(251,146,60,0.06))',
+          border: '1px solid rgba(249,115,22,0.25)', borderRadius: 14, padding: '12px 18px',
+        }}>
+          <span style={{ fontSize: 24 }}>🔥</span>
+          <div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: '#fb923c', letterSpacing: '-0.02em' }}>
+              {streak.current}-Day Focus Streak
+            </div>
+            <div style={{ fontSize: 11, color: '#78350f', fontWeight: 500, marginTop: 1 }}>
+              Personal best: {streak.longest} days · Complete a session each day to keep it going
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Time limit warnings */}
+      {limitWarnings.length > 0 && (
+        <div style={{ marginBottom: 20, display: 'flex', flexDirection: 'column' as const, gap: 10 }}>
+          {limitWarnings.map(w => (
+            <div key={w.category} style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
+              background: w.pct >= 1 ? 'rgba(239,68,68,0.08)' : 'rgba(234,179,8,0.08)',
+              border: `1px solid ${w.pct >= 1 ? 'rgba(239,68,68,0.25)' : 'rgba(234,179,8,0.25)'}`,
+              borderRadius: 12, padding: '10px 16px',
+            }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: w.pct >= 1 ? '#f87171' : '#facc15', marginBottom: 4 }}>
+                  {w.pct >= 1 ? '⏰' : '⚠️'} {w.category} — {w.pct >= 1 ? 'Limit reached' : `${Math.round(w.pct * 100)}% of limit`}
+                </div>
+                <div style={{ height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 99, overflow: 'hidden' }}>
+                  <div style={{
+                    height: '100%', borderRadius: 99,
+                    background: w.pct >= 1 ? '#ef4444' : '#eab308',
+                    width: `${Math.min(100, w.pct * 100)}%`,
+                  }} />
+                </div>
+              </div>
+              <div style={{ fontSize: 12, color: '#64748b', whiteSpace: 'nowrap' as const }}>
+                {w.used}m / {w.limit}m
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Daily quote */}
       <div style={{

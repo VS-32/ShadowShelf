@@ -9,19 +9,21 @@ const CAT_COLOR: Record<string, string> = {
   News: '#3b82f6', Other: '#64748b',
 }
 
+function localDateStr(ms?: number) {
+  const d = ms !== undefined ? new Date(ms) : new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
 function getDates(n: number) {
-  return Array.from({ length: n }, (_, i) => {
-    const d = new Date(Date.now() - i * 86400_000)
-    return d.toISOString().slice(0, 10)
-  })
+  return Array.from({ length: n }, (_, i) => localDateStr(Date.now() - i * 86400_000))
 }
 
 export default function TimelineTab() {
-  const [selected, setSelected] = useState(new Date().toISOString().slice(0, 10))
+  const [selected, setSelected] = useState(localDateStr())
   const [visits, setVisits] = useState<PageVisit[]>([])
   const [loading, setLoading] = useState(true)
   const dates = getDates(14)
-  const today = new Date().toISOString().slice(0, 10)
+  const today = localDateStr()
 
   useEffect(() => {
     setLoading(true)

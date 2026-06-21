@@ -18,55 +18,158 @@ const PRESETS = [
 
 const QUICK = [5, 10, 15, 20, 25, 30, 45, 60, 90]
 
+function localDateStr() {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
 function fmt(ms: number, long = false) {
   const total = Math.max(0, Math.ceil(ms / 1000))
   const m = Math.floor(total / 60)
   const s = total % 60
   if (long) {
-    if (m >= 60) return `${Math.floor(m/60)}h ${m%60}m`
+    if (m >= 60) return `${Math.floor(m / 60)}h ${m % 60}m`
     return `${m}m ${s}s`
   }
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
 
-function BigRing({ pct, done, ms }: { pct: number; done: boolean; ms: number }) {
+const CONFETTI_COLORS = ['#06b6d4', '#0ea5e9', '#10b981', '#34d399', '#f97316', '#a78bfa', '#ec4899', '#fbbf24']
+
+async function playChime() {
+  try {
+    const ctx = new AudioContext()
+    // AudioContext starts suspended unless created inside a user gesture.
+    // resume() unblocks it when the extension origin has had prior interaction.
+    await ctx.resume()
+    if (ctx.state !== 'running') return
+
+    const notes = [
+      { hz: 392.0, t: 0.00, dur: 0.55 },
+      { hz: 493.9, t: 0.18, dur: 0.55 },
+      { hz: 587.3, t: 0.36, dur: 0.55 },
+      { hz: 784.0, t: 0.54, dur: 1.00 },
+    ]
+    const master = ctx.createGain()
+    master.gain.value = 0.55
+    master.connect(ctx.destination)
+    for (const { hz, t, dur } of notes) {
+      const osc = ctx.createOscillator()
+      const env = ctx.createGain()
+      osc.type = 'sine'; osc.frequency.value = hz
+      osc.connect(env); env.connect(master)
+      const osc2 = ctx.createOscillator()
+      const env2 = ctx.createGain()
+      osc2.type = 'sine'; osc2.frequency.value = hz * 2
+      osc2.connect(env2); env2.connect(master)
+      const at = ctx.currentTime + t
+      env.gain.setValueAtTime(0, at)
+      env.gain.linearRampToValueAtTime(0.45, at + 0.012)
+      env.gain.exponentialRampToValueAtTime(0.001, at + dur)
+      env2.gain.setValueAtTime(0, at)
+      env2.gain.linearRampToValueAtTime(0.10, at + 0.012)
+      env2.gain.exponentialRampToValueAtTime(0.001, at + dur * 0.4)
+      osc.start(at);  osc.stop(at + dur + 0.05)
+      osc2.start(at); osc2.stop(at + dur * 0.4 + 0.05)
+    }
+  } catch { /* audio unavailable */ }
+}
+
+function Confetti({ active }: { active: boolean }) {
+  if (!active) return null
+  return (
+    <>
+      <style>{`
+        @keyframes confetti-fall {
+          0%   { transform: translateY(-10px) rotate(0deg) scale(1);   opacity: 1; }
+          80%  { opacity: 1; }
+          100% { transform: translateY(260px) rotate(540deg) scale(0.4); opacity: 0; }
+        }
+      `}</style>
+      {Array.from({ length: 22 }, (_, i) => (
+        <div key={i} style={{
+          position: 'absolute',
+          top: 0,
+          left: `${4 + (i * 4.3) % 92}%`,
+          width: i % 3 === 0 ? 8 : 6,
+          height: i % 3 === 0 ? 8 : 5,
+          borderRadius: i % 2 === 0 ? '50%' : 2,
+          background: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+          animation: `confetti-fall ${1.2 + (i % 5) * 0.18}s ease-in ${(i % 7) * 0.08}s forwards`,
+          pointerEvents: 'none',
+          zIndex: 10,
+        }} />
+      ))}
+    </>
+  )
+}
+
+function BigRing({ pct, done, ms, running }: { pct: number; done: boolean; ms: number; running: boolean }) {
   const size = 240, r = 102, stroke = 12
   const circ = 2 * Math.PI * r
   const offset = circ * (1 - Math.max(0, Math.min(1, pct)))
   const color  = done ? '#10b981' : '#06b6d4'
   const color2 = done ? '#34d399' : '#0ea5e9'
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ overflow: 'visible' }}>
       <defs>
         <linearGradient id="big-ring" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor={color} />
           <stop offset="100%" stopColor={color2} />
         </linearGradient>
         <filter id="big-glow">
-          <feGaussianBlur stdDeviation="4" result="b" />
+          <feGaussianBlur stdDeviation={done ? 6 : 4} result="b" />
           <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
         </filter>
+        {done && (
+          <filter id="done-glow">
+            <feGaussianBlur stdDeviation="8" result="b" />
+            <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+        )}
       </defs>
+
+      {/* Outer pulse ring when running */}
+      {running && (
+        <>
+          <style>{`
+            @keyframes ring-pulse {
+              0%, 100% { opacity: 0; r: 108; }
+              50%       { opacity: 0.15; }
+            }
+          `}</style>
+          <circle cx={size / 2} cy={size / 2} r={r + 10}
+            fill="none" stroke="#06b6d4" strokeWidth={2}
+            style={{ animation: 'ring-pulse 2.4s ease-in-out infinite' }}
+          />
+        </>
+      )}
+
       {/* Track */}
-      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth={stroke} />
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth={stroke} />
+
       {/* Progress */}
       <circle
-        cx={size/2} cy={size/2} r={r} fill="none"
+        cx={size / 2} cy={size / 2} r={r} fill="none"
         stroke={pct > 0 ? 'url(#big-ring)' : 'rgba(255,255,255,0.05)'}
         strokeWidth={stroke}
         strokeDasharray={circ} strokeDashoffset={offset}
-        strokeLinecap="round" transform={`rotate(-90 ${size/2} ${size/2})`}
-        filter={pct > 0 ? 'url(#big-glow)' : undefined}
+        strokeLinecap="round"
+        transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        filter={pct > 0 ? (done ? 'url(#done-glow)' : 'url(#big-glow)') : undefined}
         style={{ transition: 'stroke-dashoffset 0.9s cubic-bezier(0.4,0,0.2,1)' }}
       />
-      {/* Time text */}
-      <text x={size/2} y={size/2 - 10} textAnchor="middle"
+
+      {/* Center text */}
+      <text x={size / 2} y={size / 2 - 10} textAnchor="middle"
         fill={done ? '#10b981' : '#f1f5f9'} fontSize="42" fontWeight="800"
         fontFamily="Inter,monospace" letterSpacing="-2">
         {done ? '✓' : fmt(ms)}
       </text>
-      <text x={size/2} y={size/2 + 18} textAnchor="middle" fill="#475569" fontSize="13" fontWeight="500" fontFamily="Inter,sans-serif">
-        {done ? 'Session complete!' : ms === 0 ? 'Ready' : pct > 0 ? 'remaining' : 'set duration'}
+      <text x={size / 2} y={size / 2 + 18} textAnchor="middle"
+        fill={done ? '#10b981' : '#475569'} fontSize="13" fontWeight="500"
+        fontFamily="Inter,sans-serif">
+        {done ? 'well done!' : ms === 0 ? 'Ready' : pct > 0 ? 'remaining' : 'set duration'}
       </text>
     </svg>
   )
@@ -77,7 +180,17 @@ export default function TimerTab() {
   const [localMs, setLocalMs] = useState(25 * 60_000)
   const [customMin, setCustomMin] = useState('')
   const [sessionsToday, setSessionsToday] = useState(0)
+  const [showConfetti, setShowConfetti] = useState(false)
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const prevDone = useRef(false)
+  const confettiTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const readSessions = () => {
+    chrome.storage.local.get('timerSessions', r => {
+      const today = localDateStr()
+      setSessionsToday((r.timerSessions ?? {})[today] ?? 0)
+    })
+  }
 
   const sync = async () => {
     const res: TimerData = await chrome.runtime.sendMessage({ type: 'GET_TIMER' })
@@ -88,10 +201,22 @@ export default function TimerTab() {
 
   useEffect(() => {
     sync()
-    chrome.storage.local.get('timerSessions', r => {
-      const today = new Date().toISOString().slice(0, 10)
-      setSessionsToday((r.timerSessions ?? {})[today] ?? 0)
-    })
+    readSessions()
+
+    const handler = (changes: Record<string, chrome.storage.StorageChange>, area: string) => {
+      if (area !== 'local') return
+      if (changes.timerSessions) readSessions()
+      if (changes.timerCompleted) {
+        // Alarm just fired — trigger completion UX immediately, then sync state
+        if (confettiTimerRef.current) clearTimeout(confettiTimerRef.current)
+        setShowConfetti(true)
+        playChime()
+        confettiTimerRef.current = setTimeout(() => setShowConfetti(false), 2800)
+        sync()
+      }
+    }
+    chrome.storage.onChanged.addListener(handler)
+    return () => chrome.storage.onChanged.removeListener(handler)
   }, [])
 
   useEffect(() => {
@@ -112,6 +237,17 @@ export default function TimerTab() {
   const pct     = total > 0 ? Math.max(0, 1 - localMs / total) : 0
   const done    = localMs === 0 && total > 0 && !data?.running
   const running = data?.running ?? false
+
+  // Safety net: if dashboard opened while timer already completed, show UX once
+  useEffect(() => {
+    if (done && !prevDone.current) {
+      if (confettiTimerRef.current) clearTimeout(confettiTimerRef.current)
+      setShowConfetti(true)
+      playChime()
+      confettiTimerRef.current = setTimeout(() => setShowConfetti(false), 2800)
+    }
+    prevDone.current = done
+  }, [done])
 
   const start = async (ms?: number, label?: string) => {
     await chrome.runtime.sendMessage({ type: 'START_TIMER', totalMs: ms, label })
@@ -143,10 +279,16 @@ export default function TimerTab() {
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.1fr', gap: 24, alignItems: 'start' }}>
 
-        {/* LEFT — big ring + controls */}
-        <div style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 20, padding: 32, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 24 }}>
+        {/* LEFT — ring + controls */}
+        <div style={{
+          background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)',
+          borderRadius: 20, padding: 32,
+          display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 24,
+          position: 'relative' as const, overflow: 'hidden' as const,
+        }}>
+          <Confetti active={showConfetti} />
 
-          {/* Active label */}
+          {/* Status label */}
           {(running || done) && (
             <div style={{
               padding: '5px 14px', borderRadius: 99, fontSize: 11, fontWeight: 700,
@@ -158,10 +300,37 @@ export default function TimerTab() {
             </div>
           )}
 
-          {/* Ring */}
-          <BigRing pct={pct} done={done} ms={localMs} />
+          <BigRing pct={pct} done={done} ms={localMs} running={running} />
 
-          {/* Elapsed info */}
+          {/* Completion card */}
+          {done && (
+            <div style={{
+              width: '100%', background: 'rgba(16,185,129,0.06)',
+              border: '1px solid rgba(16,185,129,0.2)', borderRadius: 14,
+              padding: '16px 20px', textAlign: 'center' as const,
+            }}>
+              <div style={{ fontSize: 13, color: '#6ee7b7', fontWeight: 600, marginBottom: 4 }}>
+                You focused for <span style={{ color: '#34d399', fontWeight: 800 }}>{fmt(total, true)}</span>
+              </div>
+              <div style={{ fontSize: 11, color: '#475569' }}>
+                {sessionsToday} session{sessionsToday !== 1 ? 's' : ''} completed today
+              </div>
+              <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+                <button onClick={() => start(5 * 60_000, 'Break')} style={{
+                  flex: 1, padding: '9px 0', borderRadius: 10, border: 'none', cursor: 'pointer',
+                  background: 'rgba(16,185,129,0.15)', color: '#34d399',
+                  fontSize: 12, fontWeight: 700, fontFamily: 'Inter,sans-serif',
+                }}>☕ 5-min Break</button>
+                <button onClick={() => start(10 * 60_000, 'Break')} style={{
+                  flex: 1, padding: '9px 0', borderRadius: 10, border: 'none', cursor: 'pointer',
+                  background: 'rgba(16,185,129,0.1)', color: '#6ee7b7',
+                  fontSize: 12, fontWeight: 700, fontFamily: 'Inter,sans-serif',
+                }}>☕ 10-min Break</button>
+              </div>
+            </div>
+          )}
+
+          {/* Elapsed info while running */}
           {pct > 0 && !done && (
             <div style={{ display: 'flex', gap: 24, textAlign: 'center' as const }}>
               <div>
@@ -203,25 +372,25 @@ export default function TimerTab() {
                 color: running ? '#fb923c' : '#fff',
                 boxShadow: running ? 'none' : done ? '0 4px 16px rgba(16,185,129,0.3)' : '0 4px 16px rgba(6,182,212,0.35)',
                 transition: 'all 0.2s',
-                letterSpacing: '-0.01em',
               }}
             >
-              {running ? '⏸  Pause' : done ? '↺  Start Again' : '▶  Start Timer'}
+              {running ? '⏸  Pause' : done ? '↺  New Session' : '▶  Start Timer'}
             </button>
             <button onClick={reset} style={{
               padding: '13px 18px', borderRadius: 12,
               border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.04)',
               color: '#64748b', fontSize: 16, cursor: 'pointer', fontFamily: 'Inter,sans-serif',
-              transition: 'all 0.15s',
             }}>↺</button>
           </div>
 
-          {/* Sessions today */}
-          <div style={{ fontSize: 12, color: '#334155', textAlign: 'center' as const }}>
-            {sessionsToday > 0
-              ? `🔥 ${sessionsToday} session${sessionsToday > 1 ? 's' : ''} completed today`
-              : 'No sessions yet today — start your first!'}
-          </div>
+          {/* Sessions count (idle state) */}
+          {!running && !done && (
+            <div style={{ fontSize: 12, color: '#334155', textAlign: 'center' as const }}>
+              {sessionsToday > 0
+                ? `🔥 ${sessionsToday} session${sessionsToday > 1 ? 's' : ''} completed today`
+                : 'No sessions yet today — start your first!'}
+            </div>
+          )}
         </div>
 
         {/* RIGHT — presets + quick + custom */}
@@ -249,10 +418,9 @@ export default function TimerTab() {
                       <div style={{ fontSize: 13, fontWeight: 700, color: active ? '#67e8f9' : '#e2e8f0' }}>{p.label}</div>
                       <div style={{ fontSize: 11, color: '#475569', marginTop: 2 }}>{p.desc}</div>
                     </div>
-                    <div style={{
-                      fontSize: 13, fontWeight: 800, color: active ? '#38bdf8' : '#334155',
-                      letterSpacing: '-0.02em',
-                    }}>{p.ms / 60_000}m</div>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: active ? '#38bdf8' : '#334155', letterSpacing: '-0.02em' }}>
+                      {p.ms / 60_000}m
+                    </div>
                   </button>
                 )
               })}
@@ -298,18 +466,17 @@ export default function TimerTab() {
                   background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)',
                   borderRadius: 10, color: '#f1f5f9', fontSize: 13,
                   outline: 'none', fontFamily: 'Inter,sans-serif',
-                  opacity: running ? 0.5 : 1,
-                  transition: 'border-color 0.2s',
+                  opacity: running ? 0.5 : 1, transition: 'border-color 0.2s',
                 }}
                 onFocus={e => (e.target.style.borderColor = 'rgba(6,182,212,0.5)')}
                 onBlur={e => (e.target.style.borderColor = 'rgba(255,255,255,0.1)')}
               />
               <button onClick={handleCustom} disabled={!customMin || running} style={{
-                padding: '10px 16px', borderRadius: 10, border: 'none', cursor: customMin && !running ? 'pointer' : 'default',
+                padding: '10px 16px', borderRadius: 10, border: 'none',
+                cursor: customMin && !running ? 'pointer' : 'default',
                 background: customMin && !running ? 'linear-gradient(135deg,#06b6d4,#0ea5e9)' : 'rgba(255,255,255,0.06)',
                 color: customMin && !running ? '#fff' : '#334155',
-                fontSize: 13, fontWeight: 700, fontFamily: 'Inter,sans-serif',
-                transition: 'all 0.2s',
+                fontSize: 13, fontWeight: 700, fontFamily: 'Inter,sans-serif', transition: 'all 0.2s',
               }}>Set</button>
             </div>
           </div>

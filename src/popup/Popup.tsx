@@ -13,37 +13,124 @@ const CAT_COLOR: Record<Category, string> = {
   News: '#3b82f6', Other: '#64748b',
 }
 
-// ── Onboarding screen ─────────────────────────────────────────────────────────
+// ── Onboarding screen (2-step) ────────────────────────────────────────────────
+const PERM_ITEMS = [
+  {
+    icon: '📊', title: 'Browsing Analytics', always: true,
+    desc: 'Tracks time on each site to build focus scores and category breakdowns',
+  },
+  {
+    icon: '📌', title: 'Highlight Memory', key: 'highlightEnabled',
+    desc: 'Save selected text on any page with one click — stored locally',
+  },
+  {
+    icon: '📋', title: 'Clipboard History', key: 'clipboardEnabled',
+    desc: 'Remember URLs, phone numbers, and text you copy — never leaves your device',
+  },
+  {
+    icon: '🔔', title: 'Break Reminders', always: true,
+    desc: 'Desktop notifications when you\'ve been browsing non-stop',
+  },
+] as const
+
+function MiniToggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button onClick={() => onChange(!on)} style={{
+      width: 36, height: 20, borderRadius: 99, border: 'none', cursor: 'pointer', flexShrink: 0,
+      background: on ? 'linear-gradient(135deg,#06b6d4,#0ea5e9)' : 'rgba(255,255,255,0.1)',
+      position: 'relative', transition: 'background 0.2s',
+    }}>
+      <div style={{
+        position: 'absolute', top: 2, left: on ? 18 : 2,
+        width: 16, height: 16, borderRadius: '50%', background: '#fff',
+        transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+      }} />
+    </button>
+  )
+}
+
 function Onboarding({ onDone }: { onDone: (name: string) => void }) {
+  const [step, setStep] = useState(1)
   const [name, setName] = useState('')
+  const [highlightEnabled, setHighlightEnabled] = useState(true)
+  const [clipboardEnabled, setClipboardEnabled] = useState(true)
 
   const submit = () => {
     const trimmed = name.trim()
     if (!trimmed) return
-    chrome.storage.local.set({ userName: trimmed }, () => onDone(trimmed))
+    chrome.storage.sync.set({ userName: trimmed, highlightEnabled, clipboardEnabled }, () => onDone(trimmed))
   }
+
+  const toggleMap: Record<string, { value: boolean; set: (v: boolean) => void }> = {
+    highlightEnabled: { value: highlightEnabled, set: setHighlightEnabled },
+    clipboardEnabled: { value: clipboardEnabled, set: setClipboardEnabled },
+  }
+
+  if (step === 1) return (
+    <div style={{ width: 340, background: '#0d1117', fontFamily: 'Inter,sans-serif', padding: '26px 20px 22px' }}>
+      <div style={{ width: 44, height: 44, borderRadius: 14, margin: '0 auto 14px', overflow: 'hidden', boxShadow: '0 6px 20px rgba(6,182,212,0.4)' }}>
+        <img src="/icons/icon48.png" alt="" style={{ width: '100%', height: '100%', display: 'block' }} />
+      </div>
+      <h2 style={{ fontSize: 18, fontWeight: 800, color: '#f1f5f9', textAlign: 'center', margin: '0 0 4px', letterSpacing: '-0.03em' }}>
+        Welcome to ShadowShelf
+      </h2>
+      <p style={{ fontSize: 11, color: '#475569', textAlign: 'center', margin: '0 0 18px', lineHeight: 1.55 }}>
+        Here's what the extension uses — toggle off anything you don't want.
+      </p>
+
+      <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 7, marginBottom: 18 }}>
+        {PERM_ITEMS.map(p => (
+          <div key={p.title} style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            padding: '9px 11px', borderRadius: 10,
+            background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)',
+          }}>
+            <span style={{ fontSize: 17, flexShrink: 0 }}>{p.icon}</span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#e2e8f0' }}>{p.title}</div>
+              <div style={{ fontSize: 10, color: '#475569', marginTop: 1, lineHeight: 1.4 }}>{p.desc}</div>
+            </div>
+            {'always' in p && p.always ? (
+              <span style={{
+                fontSize: 9, fontWeight: 700, color: '#334155', flexShrink: 0,
+                background: 'rgba(255,255,255,0.05)', padding: '2px 7px', borderRadius: 99, whiteSpace: 'nowrap' as const,
+              }}>Always on</span>
+            ) : (
+              <MiniToggle
+                on={toggleMap[p.key!].value}
+                onChange={toggleMap[p.key!].set}
+              />
+            )}
+          </div>
+        ))}
+      </div>
+
+      <button onClick={() => setStep(2)} style={{
+        width: '100%', padding: '11px 0', borderRadius: 12, border: 'none',
+        background: 'linear-gradient(135deg,#06b6d4,#0ea5e9)', color: '#fff',
+        fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter,sans-serif',
+        boxShadow: '0 4px 14px rgba(6,182,212,0.35)',
+      }}>Next →</button>
+
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, marginTop: 12, color: '#1e293b', fontSize: 10 }}>
+        <IconShield size={10} /> Nothing is ever sent to a server — 100% local
+      </div>
+    </div>
+  )
 
   return (
     <div style={{ width: 340, background: '#0d1117', fontFamily: 'Inter,sans-serif', padding: '32px 24px 28px' }}>
-      <div style={{
-        width: 52, height: 52, borderRadius: 16, margin: '0 auto 20px',
-        background: 'linear-gradient(135deg, #06b6d4, #0ea5e9)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: 24, fontWeight: 800, color: '#fff',
-        boxShadow: '0 8px 24px rgba(6,182,212,0.4)',
-      }}>S</div>
-
-      <h2 style={{ fontSize: 20, fontWeight: 800, color: '#f1f5f9', textAlign: 'center', margin: '0 0 6px', letterSpacing: '-0.03em' }}>
-        Welcome to ShadowShelf
+      <div style={{ width: 44, height: 44, borderRadius: 14, margin: '0 auto 18px', overflow: 'hidden', boxShadow: '0 6px 20px rgba(6,182,212,0.4)' }}>
+        <img src="/icons/icon48.png" alt="" style={{ width: '100%', height: '100%', display: 'block' }} />
+      </div>
+      <h2 style={{ fontSize: 18, fontWeight: 800, color: '#f1f5f9', textAlign: 'center', margin: '0 0 5px', letterSpacing: '-0.03em' }}>
+        What should we call you?
       </h2>
-      <p style={{ fontSize: 13, color: '#475569', textAlign: 'center', margin: '0 0 28px', lineHeight: 1.6 }}>
-        Your private digital mirror. What should we call you?
+      <p style={{ fontSize: 11, color: '#475569', textAlign: 'center', margin: '0 0 20px', lineHeight: 1.55 }}>
+        Used for your greeting and character profile
       </p>
-
       <input
-        autoFocus
-        value={name}
-        onChange={e => setName(e.target.value)}
+        autoFocus value={name} onChange={e => setName(e.target.value)}
         onKeyDown={e => e.key === 'Enter' && submit()}
         placeholder="Enter your name…"
         style={{
@@ -55,20 +142,19 @@ function Onboarding({ onDone }: { onDone: (name: string) => void }) {
         onFocus={e => (e.target.style.borderColor = 'rgba(6,182,212,0.6)')}
         onBlur={e => (e.target.style.borderColor = 'rgba(255,255,255,0.12)')}
       />
-
-      <button onClick={submit} disabled={!name.trim()} style={{
-        width: '100%', padding: '12px 0', borderRadius: 12, border: 'none',
-        background: name.trim() ? 'linear-gradient(135deg, #06b6d4, #0ea5e9)' : 'rgba(255,255,255,0.06)',
-        color: name.trim() ? '#fff' : '#334155', fontSize: 14, fontWeight: 700,
-        cursor: name.trim() ? 'pointer' : 'default', fontFamily: 'Inter,sans-serif',
-        boxShadow: name.trim() ? '0 4px 16px rgba(6,182,212,0.35)' : 'none',
-        transition: 'all 0.2s',
-      }}>
-        Get Started →
-      </button>
-
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, marginTop: 16, color: '#1e293b', fontSize: 11 }}>
-        <IconShield size={11} /> Everything stays private on your device
+      <div style={{ display: 'flex', gap: 10 }}>
+        <button onClick={() => setStep(1)} style={{
+          padding: '11px 16px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)',
+          background: 'rgba(255,255,255,0.04)', color: '#64748b', fontSize: 13, fontWeight: 600,
+          cursor: 'pointer', fontFamily: 'Inter,sans-serif',
+        }}>← Back</button>
+        <button onClick={submit} disabled={!name.trim()} style={{
+          flex: 1, padding: '11px 0', borderRadius: 12, border: 'none',
+          background: name.trim() ? 'linear-gradient(135deg,#06b6d4,#0ea5e9)' : 'rgba(255,255,255,0.06)',
+          color: name.trim() ? '#fff' : '#334155', fontSize: 13, fontWeight: 700,
+          cursor: name.trim() ? 'pointer' : 'default', fontFamily: 'Inter,sans-serif',
+          boxShadow: name.trim() ? '0 4px 14px rgba(6,182,212,0.35)' : 'none', transition: 'all 0.2s',
+        }}>Get Started →</button>
       </div>
     </div>
   )
@@ -130,11 +216,14 @@ export default function Popup() {
   } | null>(null)
   const [breakStatus, setBreakStatus] = useState<{ elapsed: number; needed: boolean }>({ elapsed: 0, needed: false })
   const [profile, setProfile] = useState<ReturnType<typeof computeProfile> | null>(null)
+  const [streak, setStreak] = useState<{ current: number; longest: number } | null>(null)
   const quote = getDailyQuote()
 
   const loadData = useCallback(async () => {
-    const stored = await chrome.storage.local.get(['userName', 'breakIntervalMin'])
+    const stored = await chrome.storage.sync.get(['userName', 'breakIntervalMin'])
     setUserName(stored.userName ?? null)
+
+    chrome.storage.local.get(['focusStreak'], r => setStreak(r.focusStreak ?? null))
 
     const { visits, totalTime, breakdown } = await getTodayStats()
     const dm: Record<string, number> = {}
@@ -197,13 +286,9 @@ export default function Popup() {
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{
-            width: 32, height: 32, borderRadius: 10, flexShrink: 0,
-            background: 'linear-gradient(135deg, #06b6d4, #0ea5e9)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 15, fontWeight: 800, color: '#fff',
-            boxShadow: '0 4px 12px rgba(6,182,212,0.4)',
-          }}>S</div>
+          <div style={{ width: 32, height: 32, borderRadius: 10, flexShrink: 0, boxShadow: '0 4px 12px rgba(6,182,212,0.4)', overflow: 'hidden' }}>
+            <img src="/icons/icon48.png" alt="ShadowShelf" style={{ width: '100%', height: '100%', display: 'block' }} />
+          </div>
           <div>
             <div style={{ fontSize: 12, fontWeight: 700, color: '#f1f5f9' }}>{greeting}, {userName}!</div>
             <div style={{ fontSize: 10, color: '#475569', marginTop: 1 }}>ShadowShelf</div>
@@ -220,6 +305,26 @@ export default function Popup() {
       </div>
 
       <div style={{ padding: '14px 16px' }}>
+
+        {/* Streak badge */}
+        {streak && streak.current > 0 && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14,
+            background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.22)',
+            borderRadius: 10, padding: '8px 12px',
+          }}>
+            <span style={{ fontSize: 16 }}>🔥</span>
+            <div style={{ flex: 1 }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: '#fb923c' }}>
+                {streak.current}-Day Streak
+              </span>
+              <span style={{ fontSize: 10, color: '#78350f', marginLeft: 6 }}>
+                best: {streak.longest}d
+              </span>
+            </div>
+            <span style={{ fontSize: 10, color: '#92400e' }}>Keep it up!</span>
+          </div>
+        )}
 
         {/* Daily Quote */}
         <div style={{

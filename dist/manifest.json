@@ -35,7 +35,8 @@
     "clipboardRead",
     "alarms",
     "notifications",
-    "idle"
+    "idle",
+    "offscreen"
   ],
   "host_permissions": ["<all_urls>"],
   "web_accessible_resources": [
@@ -44,6 +45,9 @@
       "matches": ["<all_urls>"]
     }
   ],
+  "chrome_url_overrides": {
+    "newtab": "newtab/index.html"
+  },
   "options_ui": {
     "page": "dashboard/index.html",
     "open_in_tab": true

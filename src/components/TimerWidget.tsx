@@ -22,6 +22,42 @@ function fmt(ms: number) {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
 
+async function playChime() {
+  try {
+    const ctx = new AudioContext()
+    await ctx.resume()
+    if (ctx.state !== 'running') return
+    const notes = [
+      { hz: 392.0, t: 0.00, dur: 0.55 },
+      { hz: 493.9, t: 0.18, dur: 0.55 },
+      { hz: 587.3, t: 0.36, dur: 0.55 },
+      { hz: 784.0, t: 0.54, dur: 1.00 },
+    ]
+    const master = ctx.createGain()
+    master.gain.value = 0.55
+    master.connect(ctx.destination)
+    for (const { hz, t, dur } of notes) {
+      const osc = ctx.createOscillator()
+      const env = ctx.createGain()
+      osc.type = 'sine'; osc.frequency.value = hz
+      osc.connect(env); env.connect(master)
+      const osc2 = ctx.createOscillator()
+      const env2 = ctx.createGain()
+      osc2.type = 'sine'; osc2.frequency.value = hz * 2
+      osc2.connect(env2); env2.connect(master)
+      const at = ctx.currentTime + t
+      env.gain.setValueAtTime(0, at)
+      env.gain.linearRampToValueAtTime(0.45, at + 0.012)
+      env.gain.exponentialRampToValueAtTime(0.001, at + dur)
+      env2.gain.setValueAtTime(0, at)
+      env2.gain.linearRampToValueAtTime(0.10, at + 0.012)
+      env2.gain.exponentialRampToValueAtTime(0.001, at + dur * 0.4)
+      osc.start(at);  osc.stop(at + dur + 0.05)
+      osc2.start(at); osc2.stop(at + dur * 0.4 + 0.05)
+    }
+  } catch { /* audio unavailable */ }
+}
+
 function Ring({ pct, done, size = 80 }: { pct: number; done: boolean; size?: number }) {
   const r = size / 2 - 6
   const circ = 2 * Math.PI * r
@@ -52,6 +88,7 @@ export default function TimerWidget() {
   const [data, setData] = useState<TimerData | null>(null)
   const [localMs, setLocalMs] = useState<number>(25 * 60_000)
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const chimeFiredRef = useRef(false)
 
   const sync = async () => {
     const res: TimerData = await chrome.runtime.sendMessage({ type: 'GET_TIMER' })
@@ -60,7 +97,24 @@ export default function TimerWidget() {
     return res
   }
 
-  useEffect(() => { sync() }, [])
+  useEffect(() => {
+    sync()
+
+    const handler = (changes: Record<string, chrome.storage.StorageChange>, area: string) => {
+      if (area !== 'local') return
+      if (changes.timerCompleted) {
+        // Alarm fired — play sound immediately, then sync to update visual
+        if (!chimeFiredRef.current) {
+          chimeFiredRef.current = true
+          playChime()
+          setTimeout(() => { chimeFiredRef.current = false }, 3000)
+        }
+        sync()
+      }
+    }
+    chrome.storage.onChanged.addListener(handler)
+    return () => chrome.storage.onChanged.removeListener(handler)
+  }, [])
 
   useEffect(() => {
     if (tickRef.current) clearInterval(tickRef.current)
@@ -79,12 +133,28 @@ export default function TimerWidget() {
     return () => { if (tickRef.current) clearInterval(tickRef.current) }
   }, [data?.running, data?.startedAt])
 
-  const total = data?.totalMs ?? 25 * 60_000
-  const pct   = total > 0 ? Math.max(0, 1 - localMs / total) : 0
-  const done  = localMs === 0 && total > 0
+  const total   = data?.totalMs ?? 25 * 60_000
+  const pct     = total > 0 ? Math.max(0, 1 - localMs / total) : 0
+  // done: timer reached 0 AND is not running (alarm has fired)
+  const done    = localMs === 0 && total > 0 && !data?.running
+  const running = data?.running ?? false
 
+  // When done and it's a fresh detection (popup opened to already-completed state), play chime
+  const prevDoneRef = useRef(false)
+  useEffect(() => {
+    if (done && !prevDoneRef.current && !chimeFiredRef.current) {
+      chimeFiredRef.current = true
+      playChime()
+      setTimeout(() => { chimeFiredRef.current = false }, 3000)
+    }
+    prevDoneRef.current = done
+  }, [done])
+
+  // Always pass totalMs when restarting so SW doesn't use stale remainingMs=0
   const start = async (ms?: number, label?: string) => {
-    await chrome.runtime.sendMessage({ type: 'START_TIMER', totalMs: ms, label })
+    const totalMs = ms ?? data?.totalMs ?? 25 * 60_000
+    const lbl = label ?? data?.label ?? 'Focus'
+    await chrome.runtime.sendMessage({ type: 'START_TIMER', totalMs, label: lbl })
     await sync()
   }
   const pause = async () => { await chrome.runtime.sendMessage({ type: 'PAUSE_TIMER' }); await sync() }
@@ -96,8 +166,6 @@ export default function TimerWidget() {
 
   if (!data) return null
 
-  const running = data.running
-
   return (
     <div style={{
       background: 'rgba(6,182,212,0.07)',
@@ -105,7 +173,7 @@ export default function TimerWidget() {
       borderRadius: 14, padding: '12px 14px', marginBottom: 14,
     }}>
       <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.08em', color: '#0891b2', marginBottom: 10 }}>
-        ⏱ {done ? 'Complete!' : running ? `${data.label} Timer` : 'Focus Timer'}
+        ⏱ {done ? '✅ Complete!' : running ? `${data.label} Timer` : 'Focus Timer'}
       </div>
 
       {/* Main row */}
@@ -124,8 +192,8 @@ export default function TimerWidget() {
         </div>
 
         <div style={{ flex: 1 }}>
-          {/* Preset pills — show when not running */}
-          {!running && (
+          {/* Preset pills — show when not running and not done */}
+          {!running && !done && (
             <div style={{ display: 'flex', gap: 5, marginBottom: 8, flexWrap: 'wrap' as const }}>
               {PRESETS.map(p => (
                 <button key={p.label} onClick={() => setPreset(p.ms, p.label)} style={{
@@ -148,9 +216,13 @@ export default function TimerWidget() {
               style={{
                 flex: 1, padding: '7px 0', borderRadius: 8, border: 'none', cursor: 'pointer',
                 fontFamily: 'Inter,sans-serif', fontSize: 12, fontWeight: 700,
-                background: running ? 'rgba(249,115,22,0.2)' : 'linear-gradient(135deg,#06b6d4,#0ea5e9)',
+                background: done
+                  ? 'linear-gradient(135deg,#10b981,#34d399)'
+                  : running
+                    ? 'rgba(249,115,22,0.2)'
+                    : 'linear-gradient(135deg,#06b6d4,#0ea5e9)',
                 color: running ? '#fb923c' : '#fff',
-                boxShadow: running ? 'none' : '0 2px 8px rgba(6,182,212,0.3)',
+                boxShadow: done ? '0 2px 8px rgba(16,185,129,0.3)' : running ? 'none' : '0 2px 8px rgba(6,182,212,0.3)',
                 transition: 'all 0.15s',
               }}
             >

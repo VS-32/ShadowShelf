@@ -3,12 +3,18 @@ import { db, pruneOldData } from '../../db/db'
 import { IconShield, IconDownload, IconTrash } from '../../components/Icons'
 import Dropdown from '../../components/Dropdown'
 
+type Category = 'Learning' | 'Work' | 'Entertainment' | 'Social Media' | 'Shopping' | 'Finance' | 'News' | 'Other'
+const CATEGORIES: Category[] = ['Social Media', 'Entertainment', 'News', 'Shopping', 'Learning', 'Work', 'Finance', 'Other']
+
 interface Settings {
   retentionDays: number
   clipboardEnabled: boolean
   highlightEnabled: boolean
   breakIntervalMin: number
   userName: string
+  focusBlockEnabled: boolean
+  blockedDomains: string
+  categoryLimits: Record<Category, number>
 }
 
 const DEFAULTS: Settings = {
@@ -17,6 +23,9 @@ const DEFAULTS: Settings = {
   highlightEnabled: true,
   breakIntervalMin: 45,
   userName: '',
+  focusBlockEnabled: false,
+  blockedDomains: '',
+  categoryLimits: { 'Social Media': 0, Entertainment: 0, News: 0, Shopping: 0, Learning: 0, Work: 0, Finance: 0, Other: 0 },
 }
 
 const BREAK_OPTIONS = [
@@ -91,7 +100,18 @@ export default function SettingsTab() {
   const [counts, setCounts] = useState({ visits: 0, highlights: 0, clipboard: 0 })
 
   useEffect(() => {
-    chrome.storage.local.get(Object.keys(DEFAULTS), res => setSettings({ ...DEFAULTS, ...res } as Settings))
+    chrome.storage.sync.get(
+      ['retentionDays', 'clipboardEnabled', 'highlightEnabled', 'breakIntervalMin', 'userName', 'focusBlockEnabled', 'blockedDomains', 'categoryLimits'],
+      res => {
+        const raw = res.blockedDomains as string[] | string | undefined
+        setSettings({
+          ...DEFAULTS,
+          ...res,
+          categoryLimits: { ...DEFAULTS.categoryLimits, ...(res.categoryLimits ?? {}) },
+          blockedDomains: Array.isArray(raw) ? raw.join('\n') : (raw ?? ''),
+        } as Settings)
+      }
+    )
     refreshCounts()
   }, [])
 
@@ -100,7 +120,14 @@ export default function SettingsTab() {
       .then(([visits, highlights, clipboard]) => setCounts({ visits, highlights, clipboard }))
 
   const save = () => {
-    chrome.storage.local.set(settings, () => {
+    const toStore = {
+      ...settings,
+      blockedDomains: settings.blockedDomains
+        .split('\n')
+        .map(d => d.trim().toLowerCase().replace(/^https?:\/\/(www\.)?/, '').split('/')[0])
+        .filter(Boolean),
+    }
+    chrome.storage.sync.set(toStore, () => {
       setSaved(true); setTimeout(() => setSaved(false), 2000)
     })
   }
@@ -172,6 +199,61 @@ export default function SettingsTab() {
         <Toggle label="Clipboard History" description="Capture text, URLs, and phone numbers you copy" value={settings.clipboardEnabled} onChange={v => setSettings(s => ({ ...s, clipboardEnabled: v }))} />
         <Toggle label="Highlight Memory" description='Show "Save Highlight" tooltip when you select text' value={settings.highlightEnabled} onChange={v => setSettings(s => ({ ...s, highlightEnabled: v }))} />
         <div style={{ paddingTop: 4 }} />
+      </Section>
+
+      {/* Focus Blocker */}
+      <Section title="Focus Blocker">
+        <Toggle
+          label="Block sites during focus sessions"
+          description="Show a lock screen on listed sites while your timer is running"
+          value={settings.focusBlockEnabled}
+          onChange={v => setSettings(s => ({ ...s, focusBlockEnabled: v }))}
+        />
+        <div style={{ paddingTop: 14 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0', marginBottom: 4 }}>Blocked Domains</div>
+          <div style={{ fontSize: 12, color: '#475569', marginBottom: 8 }}>One domain per line (e.g. youtube.com, reddit.com)</div>
+          <textarea
+            value={settings.blockedDomains}
+            onChange={e => setSettings(s => ({ ...s, blockedDomains: e.target.value }))}
+            rows={5}
+            placeholder={'youtube.com\nreddit.com\ntwitter.com'}
+            style={{
+              width: '100%', padding: '10px 14px', boxSizing: 'border-box' as const,
+              background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: 10, color: '#f1f5f9', fontSize: 12, fontFamily: 'Inter, monospace',
+              outline: 'none', resize: 'vertical' as const, lineHeight: 1.7,
+              transition: 'border-color 0.2s',
+            }}
+            onFocus={e => (e.target.style.borderColor = 'rgba(6,182,212,0.5)')}
+            onBlur={e => (e.target.style.borderColor = 'rgba(255,255,255,0.1)')}
+          />
+        </div>
+      </Section>
+
+      {/* Daily Time Limits */}
+      <Section title="Daily Time Limits">
+        <div style={{ fontSize: 12, color: '#475569', marginBottom: 14, lineHeight: 1.6 }}>
+          Get notified when you're approaching or exceed your daily limit for each category. Set to Off to disable.
+        </div>
+        {CATEGORIES.map(cat => (
+          <div key={cat} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+            <div style={{ fontSize: 13, fontWeight: 500, color: '#cbd5e1' }}>{cat}</div>
+            <Dropdown
+              value={settings.categoryLimits[cat] ?? 0}
+              onChange={v => setSettings(s => ({ ...s, categoryLimits: { ...s.categoryLimits, [cat]: Number(v) } }))}
+              options={[
+                { value: 0, label: 'Off' },
+                { value: 15, label: '15 min' },
+                { value: 30, label: '30 min' },
+                { value: 45, label: '45 min' },
+                { value: 60, label: '1 hour' },
+                { value: 90, label: '1.5 hours' },
+                { value: 120, label: '2 hours' },
+                { value: 180, label: '3 hours' },
+              ]}
+            />
+          </div>
+        ))}
       </Section>
 
       {/* Retention */}
