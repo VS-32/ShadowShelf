@@ -73,11 +73,15 @@ export default function NewTab() {
   const [timer,     setTimer]     = useState<TimerData | null>(null)
   const [localMs,   setLocalMs]   = useState(0)
   const [stats,     setStats]     = useState<{ totalTime: number; focusScore: number } | null>(null)
+  const [dailyGoal, setDailyGoal] = useState(0)
   const tickRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const quote = getDailyQuote()
 
   useEffect(() => {
-    chrome.storage.sync.get(['userName'], r => setUserName(r.userName ?? ''))
+    chrome.storage.sync.get(['userName', 'dailyFocusGoal'], r => {
+      setUserName(r.userName ?? '')
+      setDailyGoal(r.dailyFocusGoal ?? 0)
+    })
     chrome.storage.local.get(['focusStreak'], r => setStreak(r.focusStreak ?? null))
 
     getTodayStats().then(({ totalTime, breakdown }) =>
@@ -172,6 +176,30 @@ export default function NewTab() {
               <div style={{ fontSize: 10, color: '#475569', marginTop: 4, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Daily goal progress */}
+      {dailyGoal > 0 && stats && (
+        <div style={{ width: '100%', maxWidth: 480, marginBottom: 28 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 7 }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: '#475569' }}>🎯 Daily Focus Goal</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: stats.focusScore >= dailyGoal ? '#10b981' : '#64748b' }}>
+              {stats.focusScore} / {dailyGoal}
+              {stats.focusScore >= dailyGoal ? ' ✅' : ''}
+            </span>
+          </div>
+          <div style={{ height: 5, background: 'rgba(255,255,255,0.06)', borderRadius: 99, overflow: 'hidden' }}>
+            <div style={{
+              height: '100%', borderRadius: 99,
+              background: stats.focusScore >= dailyGoal
+                ? 'linear-gradient(90deg,#10b981,#34d399)'
+                : 'linear-gradient(90deg,#06b6d4,#0ea5e9)',
+              width: `${Math.min(100, (stats.focusScore / dailyGoal) * 100)}%`,
+              boxShadow: stats.focusScore >= dailyGoal ? '0 0 8px rgba(16,185,129,0.5)' : '0 0 8px rgba(6,182,212,0.4)',
+              transition: 'width 0.8s cubic-bezier(0.4,0,0.2,1)',
+            }} />
+          </div>
         </div>
       )}
 

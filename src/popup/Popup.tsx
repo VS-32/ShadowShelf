@@ -291,7 +291,14 @@ export default function Popup() {
           </div>
           <div>
             <div style={{ fontSize: 12, fontWeight: 700, color: '#f1f5f9' }}>{greeting}, {userName}!</div>
-            <div style={{ fontSize: 10, color: '#475569', marginTop: 1 }}>ShadowShelf</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+              <span style={{ fontSize: 10, color: '#475569' }}>ShadowShelf</span>
+              <span style={{
+                fontSize: 8, fontWeight: 800, color: '#10b981',
+                background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.22)',
+                borderRadius: 99, padding: '1px 6px', letterSpacing: '0.05em',
+              }}>🔒 LOCAL</span>
+            </div>
           </div>
         </div>
         <button onClick={openDashboard} style={{

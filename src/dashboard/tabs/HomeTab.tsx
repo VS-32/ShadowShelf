@@ -47,6 +47,7 @@ function StatCard({ label, value, sub, accent }: { label: string; value: string;
 }
 
 interface LimitWarning { category: string; used: number; limit: number; pct: number }
+interface AllTimeRecords { longestStreak: number; highestFocusScore: number; mostProductiveSec: number; mostProductiveDay: string }
 
 export default function HomeTab() {
   const [stats, setStats] = useState<{
@@ -59,13 +60,19 @@ export default function HomeTab() {
   const [breakStatus, setBreakStatus] = useState<{ elapsed: number; needed: boolean }>({ elapsed: 0, needed: false })
   const [streak, setStreak] = useState<{ current: number; longest: number } | null>(null)
   const [limitWarnings, setLimitWarnings] = useState<LimitWarning[]>([])
+  const [records, setRecords] = useState<AllTimeRecords | null>(null)
+  const [dailyGoal, setDailyGoal] = useState(0)
 
   const quote = getDailyQuote()
 
   useEffect(() => {
-    chrome.storage.local.get(['focusStreak'], r => setStreak(r.focusStreak ?? null))
+    chrome.storage.local.get(['focusStreak', 'allTimeRecords'], r => {
+      setStreak(r.focusStreak ?? null)
+      setRecords(r.allTimeRecords ?? null)
+    })
 
-    chrome.storage.sync.get(['userName', 'breakIntervalMin', 'categoryLimits'], async (stored) => {
+    chrome.storage.sync.get(['userName', 'breakIntervalMin', 'categoryLimits', 'dailyFocusGoal'], async (stored) => {
+      setDailyGoal(stored.dailyFocusGoal ?? 0)
       setUserName(stored.userName ?? '')
 
       const { visits, totalTime, breakdown } = await getTodayStats()
@@ -310,6 +317,72 @@ export default function HomeTab() {
         <StatCard label="Unique Sites" value={stats ? `${stats.topDomains.length}` : '—'} sub="Domains today" />
         <StatCard label="Page Visits" value={stats ? `${stats.visitCount}` : '—'} sub="Tab loads today" />
       </div>
+
+      {/* Daily goal progress */}
+      {dailyGoal > 0 && stats && (
+        <div style={{
+          background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)',
+          borderRadius: 16, padding: '16px 20px', marginBottom: 20,
+          display: 'flex', alignItems: 'center', gap: 16,
+        }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8' }}>
+                🎯 Daily Focus Goal
+              </span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: stats.focusScore >= dailyGoal ? '#10b981' : '#94a3b8' }}>
+                {stats.focusScore} / {dailyGoal}
+              </span>
+            </div>
+            <div style={{ height: 6, background: 'rgba(255,255,255,0.06)', borderRadius: 99, overflow: 'hidden' }}>
+              <div style={{
+                height: '100%', borderRadius: 99,
+                background: stats.focusScore >= dailyGoal
+                  ? 'linear-gradient(90deg, #10b981, #34d399)'
+                  : 'linear-gradient(90deg, #06b6d4, #0ea5e9)',
+                width: `${Math.min(100, (stats.focusScore / dailyGoal) * 100)}%`,
+                transition: 'width 0.8s cubic-bezier(0.4,0,0.2,1)',
+              }} />
+            </div>
+          </div>
+          {stats.focusScore >= dailyGoal && (
+            <div style={{ fontSize: 22, flexShrink: 0 }}>✅</div>
+          )}
+        </div>
+      )}
+
+      {/* All-time records */}
+      {records && (records.longestStreak > 0 || records.highestFocusScore > 0 || records.mostProductiveSec > 0) && (
+        <div style={{
+          background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
+          borderRadius: 16, padding: '18px 20px', marginBottom: 24,
+        }}>
+          <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.08em', color: '#334155', marginBottom: 14 }}>
+            All-Time Personal Bests
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+            {[
+              { icon: '🔥', label: 'Longest Streak', value: records.longestStreak > 0 ? `${records.longestStreak} days` : '—', color: '#fb923c' },
+              { icon: '⚡', label: 'Best Focus Score', value: records.highestFocusScore > 0 ? `${records.highestFocusScore}` : '—', color: '#38bdf8' },
+              { icon: '🏆', label: 'Most Productive', value: records.mostProductiveSec > 0 ? formatDuration(records.mostProductiveSec) : '—', color: '#a78bfa' },
+            ].map(({ icon, label, value, color }) => (
+              <div key={label} style={{
+                background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)',
+                borderRadius: 12, padding: '14px 16px', textAlign: 'center' as const,
+              }}>
+                <div style={{ fontSize: 22, marginBottom: 6 }}>{icon}</div>
+                <div style={{ fontSize: 20, fontWeight: 800, color, letterSpacing: '-0.04em', lineHeight: 1 }}>{value}</div>
+                <div style={{ fontSize: 10, color: '#475569', marginTop: 5, fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.07em' }}>{label}</div>
+              </div>
+            ))}
+          </div>
+          {records.mostProductiveDay && (
+            <div style={{ fontSize: 11, color: '#334155', marginTop: 10, textAlign: 'center' as const }}>
+              Best day: {new Date(records.mostProductiveDay + 'T12:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+            </div>
+          )}
+        </div>
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
         {/* Top sites */}

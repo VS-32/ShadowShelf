@@ -1,5 +1,5 @@
 import { db, pruneOldData } from '../db/db'
-import { categorize, extractDomain } from '../utils/categorize'
+import { categorize, extractDomain, computeFocusScore } from '../utils/categorize'
 import type { PageVisit } from '../types'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -163,6 +163,9 @@ chrome.notifications.onButtonClicked.addListener(async (id, btn) => {
     if (btn === 0) { continuousStart = null; breakNotified = false; chrome.storage.local.set({ breakTakenAt: Date.now() }) }
     else { continuousStart = Date.now() - 15 * 60_000; breakNotified = false }
   }
+  if (id === 'daily-recap' || id === 'weekly-recap') {
+    if (btn === 0) chrome.tabs.create({ url: chrome.runtime.getURL('dashboard/index.html') })
+  }
   if (id === 'timer-done') {
     if (btn === 0) {
       // 5-min break
@@ -245,6 +248,124 @@ async function checkTimeLimits() {
     }
   }
   if (changed) await chrome.storage.local.set({ timeLimitState: state })
+}
+
+// ── All-time records ──────────────────────────────────────────────────────────
+
+async function updateAllTimeRecords(focusScore: number, totalSec: number) {
+  const today = localDateStr()
+  const res = await chrome.storage.local.get(['allTimeRecords', 'focusStreak'])
+  const streak = res.focusStreak?.current ?? 0
+  const r = res.allTimeRecords ?? { longestStreak: 0, highestFocusScore: 0, mostProductiveSec: 0, mostProductiveDay: '' }
+  let changed = false
+  if (streak > r.longestStreak)             { r.longestStreak = streak;       changed = true }
+  if (focusScore > r.highestFocusScore)     { r.highestFocusScore = focusScore; changed = true }
+  if (totalSec  > r.mostProductiveSec)      { r.mostProductiveSec = totalSec; r.mostProductiveDay = today; changed = true }
+  if (changed) await chrome.storage.local.set({ allTimeRecords: r })
+}
+
+// ── Daily focus goal ──────────────────────────────────────────────────────────
+
+async function checkDailyGoal() {
+  const [syncRes, localRes] = await Promise.all([
+    chrome.storage.sync.get('dailyFocusGoal'),
+    chrome.storage.local.get('dailyGoalState'),
+  ])
+  const goal = syncRes.dailyFocusGoal ?? 0
+  if (!goal) return
+
+  const todayStr = localDateStr()
+  const state = localRes.dailyGoalState ?? {}
+  if (state.date === todayStr && state.notified) return
+
+  const visits = await db.visits.where('date').equals(todayStr).toArray()
+  const breakdown: Record<string, number> = {}
+  for (const v of visits) breakdown[v.category] = (breakdown[v.category] ?? 0) + v.duration
+  const score = computeFocusScore(breakdown)
+
+  if (score >= goal) {
+    await chrome.storage.local.set({ dailyGoalState: { date: todayStr, notified: true } })
+    chrome.notifications.create('daily-goal', {
+      type: 'basic', iconUrl: 'icons/icon48.png',
+      title: '🎯 Daily Goal Achieved!',
+      message: `Focus score ${score} — you hit your daily target of ${goal}! Outstanding.`,
+      priority: 2,
+    })
+  }
+}
+
+// ── Daily recap ───────────────────────────────────────────────────────────────
+
+async function sendDailyRecap() {
+  const hour = new Date().getHours()
+  if (hour < 20 || hour > 22) return  // 8–10 pm window
+
+  const [localRes, syncRes] = await Promise.all([
+    chrome.storage.local.get('lastDailyRecap'),
+    chrome.storage.sync.get('dailyRecapEnabled'),
+  ])
+  if (syncRes.dailyRecapEnabled === false) return
+  const todayStr = localDateStr()
+  if (localRes.lastDailyRecap === todayStr) return
+
+  const visits = await db.visits.where('date').equals(todayStr).toArray()
+  if (!visits.length) return
+
+  const totalSec = visits.reduce((s, v) => s + v.duration, 0)
+  const breakdown: Record<string, number> = {}
+  for (const v of visits) breakdown[v.category] = (breakdown[v.category] ?? 0) + v.duration
+  const score = computeFocusScore(breakdown)
+
+  await updateAllTimeRecords(score, totalSec)
+  await chrome.storage.local.set({ lastDailyRecap: todayStr })
+
+  const hrs = Math.floor(totalSec / 3600)
+  const mins = Math.floor((totalSec % 3600) / 60)
+  const timeStr = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`
+  const mood = score >= 70 ? '🎯 Excellent focus today!'
+    : score >= 40 ? '💪 Solid effort!'
+    : '🌱 Tomorrow is a fresh start!'
+  chrome.notifications.create('daily-recap', {
+    type: 'basic', iconUrl: 'icons/icon48.png',
+    title: `🌙 Today: ${timeStr} online · Score ${score}`,
+    message: mood,
+    priority: 1,
+    buttons: [{ title: 'Open Dashboard' }],
+  })
+}
+
+// ── Weekly recap ──────────────────────────────────────────────────────────────
+
+async function sendWeeklyRecap() {
+  if (new Date().getDay() !== 0) return  // Sundays only
+
+  const [localRes, syncRes] = await Promise.all([
+    chrome.storage.local.get(['lastWeeklyRecap', 'focusStreak']),
+    chrome.storage.sync.get('weeklyRecapEnabled'),
+  ])
+  if (syncRes.weeklyRecapEnabled === false) return
+  if (localRes.lastWeeklyRecap === localDateStr()) return
+
+  const days: string[] = []
+  for (let i = 6; i >= 0; i--) days.push(localDateStr(Date.now() - i * 86400_000))
+  const visits = await db.visits.where('date').anyOf(days).toArray()
+  if (!visits.length) return
+
+  const totalSec = visits.reduce((s, v) => s + v.duration, 0)
+  const breakdown: Record<string, number> = {}
+  for (const v of visits) breakdown[v.category] = (breakdown[v.category] ?? 0) + v.duration
+  const score = computeFocusScore(breakdown)
+  const streak = localRes.focusStreak?.current ?? 0
+  const hrs = Math.round(totalSec / 3600)
+
+  await chrome.storage.local.set({ lastWeeklyRecap: localDateStr() })
+  chrome.notifications.create('weekly-recap', {
+    type: 'basic', iconUrl: 'icons/icon48.png',
+    title: '📊 Your Week in Review',
+    message: `${hrs}h online · Focus Score ${score}${streak > 0 ? ` · 🔥 ${streak}-day streak` : ' · Start a streak this week!'}`,
+    priority: 1,
+    buttons: [{ title: 'Open Dashboard' }],
+  })
 }
 
 // ── Timer helpers ─────────────────────────────────────────────────────────────
@@ -356,7 +477,9 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 
   if (alarm.name === 'break-check') {
     await checkBreak()
-    try { await checkTimeLimits() } catch { /* non-critical */ }
+    try { await checkTimeLimits() }  catch { /* non-critical */ }
+    try { await checkDailyGoal() }   catch { /* non-critical */ }
+    try { await sendDailyRecap() }   catch { /* non-critical */ }
   }
 
   if (alarm.name === 'daily-prune') {
@@ -366,6 +489,7 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
     await pruneOldData(res.retentionDays ?? 30)
     lastPruneDate = today
     await persistState()
+    try { await sendWeeklyRecap() } catch { /* non-critical */ }
   }
 
   if (alarm.name === 'timer-complete') {

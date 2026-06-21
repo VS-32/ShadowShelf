@@ -15,6 +15,9 @@ interface Settings {
   focusBlockEnabled: boolean
   blockedDomains: string
   categoryLimits: Record<Category, number>
+  dailyFocusGoal: number
+  weeklyRecapEnabled: boolean
+  dailyRecapEnabled: boolean
 }
 
 const DEFAULTS: Settings = {
@@ -26,6 +29,9 @@ const DEFAULTS: Settings = {
   focusBlockEnabled: false,
   blockedDomains: '',
   categoryLimits: { 'Social Media': 0, Entertainment: 0, News: 0, Shopping: 0, Learning: 0, Work: 0, Finance: 0, Other: 0 },
+  dailyFocusGoal: 0,
+  weeklyRecapEnabled: true,
+  dailyRecapEnabled: true,
 }
 
 const BREAK_OPTIONS = [
@@ -101,7 +107,7 @@ export default function SettingsTab() {
 
   useEffect(() => {
     chrome.storage.sync.get(
-      ['retentionDays', 'clipboardEnabled', 'highlightEnabled', 'breakIntervalMin', 'userName', 'focusBlockEnabled', 'blockedDomains', 'categoryLimits'],
+      ['retentionDays', 'clipboardEnabled', 'highlightEnabled', 'breakIntervalMin', 'userName', 'focusBlockEnabled', 'blockedDomains', 'categoryLimits', 'dailyFocusGoal', 'weeklyRecapEnabled', 'dailyRecapEnabled'],
       res => {
         const raw = res.blockedDomains as string[] | string | undefined
         setSettings({
@@ -201,6 +207,35 @@ export default function SettingsTab() {
         <div style={{ paddingTop: 4 }} />
       </Section>
 
+      {/* Notifications */}
+      <Section title="Notifications & Goals">
+        <Toggle
+          label="Daily recap at 8 PM"
+          description="Evening summary: time online, focus score, and a motivational note"
+          value={settings.dailyRecapEnabled}
+          onChange={v => setSettings(s => ({ ...s, dailyRecapEnabled: v }))}
+        />
+        <Toggle
+          label="Weekly review (Sundays)"
+          description="Week-in-review notification every Sunday with your streak and highlights"
+          value={settings.weeklyRecapEnabled}
+          onChange={v => setSettings(s => ({ ...s, weeklyRecapEnabled: v }))}
+        />
+        <SelectField
+          label="Daily Focus Goal"
+          description="Get notified the moment your focus score hits your target for the day"
+          value={settings.dailyFocusGoal}
+          onChange={v => setSettings(s => ({ ...s, dailyFocusGoal: Number(v) }))}
+          options={[
+            { value: 0,  label: 'Off' },
+            { value: 40, label: '40 — Build the habit' },
+            { value: 60, label: '60 — Stay consistent' },
+            { value: 70, label: '70 — Good focus' },
+            { value: 80, label: '80 — High performer' },
+          ]}
+        />
+      </Section>
+
       {/* Focus Blocker */}
       <Section title="Focus Blocker">
         <Toggle
@@ -268,12 +303,31 @@ export default function SettingsTab() {
         <div style={{ paddingTop: 4 }} />
       </Section>
 
-      {/* Storage */}
-      <Section title="Storage">
+      {/* Privacy & Storage */}
+      <Section title="Privacy &amp; Storage">
+        {/* Trust banner */}
+        <div style={{
+          background: 'rgba(16,185,129,0.07)', border: '1px solid rgba(16,185,129,0.2)',
+          borderRadius: 12, padding: '12px 16px', marginBottom: 16,
+          display: 'flex', alignItems: 'flex-start', gap: 12,
+        }}>
+          <div style={{ fontSize: 20, flexShrink: 0, marginTop: 1 }}>🔒</div>
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#34d399', marginBottom: 3 }}>
+              100% On-Device — Zero Telemetry
+            </div>
+            <div style={{ fontSize: 11, color: '#475569', lineHeight: 1.6 }}>
+              Your browsing data, highlights, and clipboard history live only in Chrome&apos;s local IndexedDB on this device. Only your settings sync via Chrome Sync — never your browsing data.
+              ShadowShelf has no servers, no analytics, no accounts.
+            </div>
+          </div>
+        </div>
+
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12, marginBottom: 14 }}>
-          {[{ label: 'Page Visits', count: counts.visits, color: '#06b6d4' }, { label: 'Highlights', count: counts.highlights, color: '#8b5cf6' }, { label: 'Clipboard', count: counts.clipboard, color: '#22d3ee' }]
-            .map(({ label, count, color }) => (
+          {[{ label: 'Page Visits', count: counts.visits, color: '#06b6d4', icon: '🌐' }, { label: 'Highlights', count: counts.highlights, color: '#8b5cf6', icon: '📌' }, { label: 'Clipboard', count: counts.clipboard, color: '#22d3ee', icon: '📋' }]
+            .map(({ label, count, color, icon }) => (
               <div key={label} style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.06)', padding: '14px 16px' }}>
+                <div style={{ fontSize: 16, marginBottom: 5 }}>{icon}</div>
                 <div style={{ fontSize: 22, fontWeight: 800, color, letterSpacing: '-0.03em' }}>{count}</div>
                 <div style={{ fontSize: 11, color: '#475569', marginTop: 3 }}>{label}</div>
               </div>
