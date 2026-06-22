@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "ShadowShelf",
   "version": "1.0.0",
-  "description": "Your Digital Mirror. Track browsing habits, save highlights, and remember what matters — all locally.",
+  "description": "Privacy-first browsing tracker. Focus timer, streaks, site blocking, highlights — 100% on-device. No account, no servers.",
   "icons": {
     "16":  "icons/icon16.png",
     "48":  "icons/icon48.png",

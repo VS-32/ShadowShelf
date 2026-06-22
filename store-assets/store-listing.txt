@@ -1,0 +1,148 @@
+══════════════════════════════════════════════════════════════
+SHADOWSHELF — CHROME WEB STORE LISTING COPY
+══════════════════════════════════════════════════════════════
+
+EXTENSION NAME (30 chars max)
+──────────────────────────────
+ShadowShelf
+
+
+SHORT DESCRIPTION (132 chars max — shown in search results)
+─────────────────────────────────────────────────────────────
+Privacy-first browsing tracker with focus timer, streaks & site blocking. 100% local — no account, no servers, ever.
+
+
+CATEGORY
+────────
+Productivity
+
+
+LANGUAGE
+────────
+English (United Kingdom) or English (United States)
+
+
+LONG DESCRIPTION (paste exactly as below)
+─────────────────────────────────────────
+
+ShadowShelf is your personal Digital Mirror — a productivity and privacy extension that shows you exactly how you spend your time online, without ever sending your data anywhere.
+
+Everything lives on your device. No account required. No cloud sync of browsing data. No telemetry. Ever.
+
+━━ WHAT IT DOES ━━
+
+🕐 AUTOMATIC TIME TRACKING
+Silently tracks time spent on every site and categorizes it (Work, Learning, Social Media, Entertainment, and more). See your full day at a glance in the dashboard.
+
+⚡ FOCUS SCORE
+A single daily score from 0–100 that reflects how productive your browsing was. Set a daily goal and get notified the moment you hit it.
+
+⏱ POMODORO FOCUS TIMER
+Built-in timer with customizable sessions. Automatic break reminders keep you from burning out. A streak system rewards you for consistent daily sessions.
+
+🔥 STREAKS & PERSONAL BESTS
+Track your focus streak day-over-day. See your all-time records — longest streak, highest focus score, most productive day ever.
+
+🚫 FOCUS BLOCKER
+Block distracting sites during focus sessions. When your timer is running, blocked sites show a full-screen overlay. Override for 5 minutes if you truly need access.
+
+⏰ DAILY TIME LIMITS
+Set per-category limits (e.g. 30 min Social Media). Get notified at 80% and 100% of each limit.
+
+📌 HIGHLIGHT SAVER
+Select any text on any page and save it instantly. Build a personal research library without leaving your browser.
+
+📋 CLIPBOARD TRACKER
+Automatically remembers what you copy so nothing gets lost.
+
+🌙 DAILY & WEEKLY RECAPS
+Evening summary notification with your day's stats. Sunday weekly review so you can see trends across the week.
+
+🗂 NEW TAB DASHBOARD
+Every new tab shows your focus score, daily goal progress, running timer, and an inspirational quote — making your productivity status visible at a glance.
+
+━━ YOUR PRIVACY, GUARANTEED ━━
+
+• All browsing history, highlights, and clipboard data is stored only in Chrome's local IndexedDB on your device
+• Only your settings (not browsing data) sync via Chrome Sync
+• Zero network requests from the extension itself
+• No third-party SDKs, analytics, or trackers
+• Open source — inspect the code yourself at github.com/VS-32/ShadowShelf
+
+━━ PERMISSIONS EXPLAINED ━━
+
+• storage — save your data locally and sync settings
+• tabs / activeTab — detect the current site for tracking
+• clipboardRead — clipboard history feature
+• alarms — timer, break reminders, daily recap
+• notifications — timer alerts, streak milestones, goal reached
+• host_permissions (<all_urls>) — track time across all sites and inject focus blocker overlay
+
+
+══════════════════════════════════════════════════════════════
+PRIVACY PRACTICES (Chrome Web Store form answers)
+══════════════════════════════════════════════════════════════
+
+Does your extension collect or use any user data? → YES (for local storage only)
+
+DATA TYPES COLLECTED:
+  ✅ Website content — Yes (page URLs and time spent, stored locally only)
+  ✅ User activity — Yes (browsing history, stored locally only)
+  ✅ Personally identifiable information — No
+  ✅ Health info — No
+  ✅ Financial info — No
+  ✅ Authentication info — No
+  ✅ Personal communications — No
+  ✅ Location — No
+  ✅ Web history — Yes (stored locally only, never transmitted)
+
+FOR EACH DATA TYPE COLLECTED, ANSWER:
+  - How is it used? → "Stored only on the user's device to display browsing statistics and enable the focus timer and blocker features."
+  - Is it shared with third parties? → No
+  - Is it used for purposes unrelated to the extension's core functionality? → No
+  - Is it used to determine creditworthiness or for lending purposes? → No
+
+CERTIFIED: This extension handles user data in compliance with Chrome Web Store's User Data Policy.
+
+
+══════════════════════════════════════════════════════════════
+PRIVACY POLICY URL
+══════════════════════════════════════════════════════════════
+
+After enabling GitHub Pages on the repo (Settings → Pages → Branch: main → Folder: /docs):
+
+https://vs-32.github.io/ShadowShelf/privacy-policy.html
+
+
+══════════════════════════════════════════════════════════════
+SCREENSHOTS — ORDER AND FILENAMES
+══════════════════════════════════════════════════════════════
+
+screenshot-1.png  — New Tab page (clock, streak, focus score, goal bar)
+screenshot-2.png  — Popup open with timer running + streak badge
+screenshot-3.png  — Dashboard Home with stat cards + All-Time Records
+screenshot-4.png  — Insights tab with category breakdown
+screenshot-5.png  — Settings tab showing the privacy banner
+
+Size: 1280×800 px (or 640×400 — Chrome accepts both)
+Format: PNG
+
+PROMOTIONAL TILE: 440×280 px PNG
+  Open store-assets/promotional-tile.html in Chrome
+  DevTools → Device toolbar → set 440×280 → Capture screenshot
+
+
+══════════════════════════════════════════════════════════════
+SUBMISSION CHECKLIST
+══════════════════════════════════════════════════════════════
+
+[ ] GitHub Pages enabled → privacy policy live at vs-32.github.io/ShadowShelf/privacy-policy.html
+[ ] 5 screenshots captured (1280×800 PNG)
+[ ] Promotional tile captured (440×280 PNG)
+[ ] shadowshelf.zip built from dist/ folder (npm run build → zip dist/*)
+[ ] Chrome Web Store developer account registered ($5 one-time)
+[ ] New Item created → zip uploaded
+[ ] Store listing filled (name, short desc, long desc, category)
+[ ] Privacy policy URL entered
+[ ] Privacy practices form completed
+[ ] Submit for review

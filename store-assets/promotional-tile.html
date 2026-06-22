@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<!--
+  Open this file in Chrome.
+  Set DevTools device to exactly 440 x 280.
+  Then: Ctrl+Shift+P → "Capture screenshot" → save as promotional-tile.png
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800;900&display=swap');
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 440px; height: 280px; overflow: hidden; }
+    body {
+      background: #0d1117;
+      font-family: 'Inter', -apple-system, sans-serif;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 36px 40px;
+    }
+
+    /* Background glow orbs */
+    .orb1 {
+      position: absolute; width: 260px; height: 260px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(6,182,212,0.18) 0%, transparent 70%);
+      top: -80px; right: -60px; pointer-events: none;
+    }
+    .orb2 {
+      position: absolute; width: 180px; height: 180px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%);
+      bottom: -50px; left: 20px; pointer-events: none;
+    }
+
+    /* Grid lines */
+    .grid {
+      position: absolute; inset: 0; pointer-events: none; opacity: 0.04;
+      background-image:
+        linear-gradient(#fff 1px, transparent 1px),
+        linear-gradient(90deg, #fff 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
+    .icon-wrap {
+      width: 52px; height: 52px; border-radius: 14px;
+      background: linear-gradient(135deg, #06b6d4 0%, #0ea5e9 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; margin-bottom: 16px;
+      box-shadow: 0 8px 24px rgba(6,182,212,0.45);
+      flex-shrink: 0;
+    }
+
+    h1 {
+      font-size: 38px; font-weight: 900; color: #f1f5f9;
+      letter-spacing: -0.05em; line-height: 1; margin-bottom: 8px;
+    }
+    h1 span { color: #06b6d4; }
+
+    .tagline {
+      font-size: 14px; font-weight: 500; color: #475569;
+      letter-spacing: 0.01em; margin-bottom: 22px;
+    }
+
+    .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+    .chip {
+      font-size: 10px; font-weight: 700; padding: 4px 10px;
+      border-radius: 99px; letter-spacing: 0.04em;
+    }
+    .chip-cyan  { background: rgba(6,182,212,0.12);  border: 1px solid rgba(6,182,212,0.3);  color: #22d3ee; }
+    .chip-green { background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.3); color: #34d399; }
+    .chip-violet{ background: rgba(139,92,246,0.12); border: 1px solid rgba(139,92,246,0.3); color: #a78bfa; }
+
+    .privacy-badge {
+      position: absolute; top: 20px; right: 20px;
+      font-size: 10px; font-weight: 800; color: #10b981;
+      background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.25);
+      border-radius: 99px; padding: 5px 12px; letter-spacing: 0.05em;
+    }
+
+    /* Decorative stat cards on the right */
+    .stat-cards {
+      position: absolute; right: 32px; top: 50%; transform: translateY(-50%);
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .stat-card {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px; padding: 10px 14px; min-width: 100px; text-align: center;
+    }
+    .stat-val  { font-size: 18px; font-weight: 800; letter-spacing: -0.04em; line-height: 1; }
+    .stat-lbl  { font-size: 9px; color: #334155; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <div class="grid"></div>
+  <div class="orb1"></div>
+  <div class="orb2"></div>
+
+  <div class="privacy-badge">🔒 100% LOCAL</div>
+
+  <div class="icon-wrap">🕵️</div>
+  <h1>Shadow<span>Shelf</span></h1>
+  <div class="tagline">Your Digital Mirror · Privacy-first browsing tracker</div>
+  <div class="chips">
+    <div class="chip chip-cyan">⏱ Focus Timer</div>
+    <div class="chip chip-cyan">📊 Time Tracking</div>
+    <div class="chip chip-violet">🔥 Streaks</div>
+    <div class="chip chip-green">Zero Telemetry</div>
+  </div>
+
+  <div class="stat-cards">
+    <div class="stat-card">
+      <div class="stat-val" style="color:#06b6d4;">78</div>
+      <div class="stat-lbl">Focus Score</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" style="color:#fb923c;">🔥 14d</div>
+      <div class="stat-lbl">Streak</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" style="color:#a78bfa;">4h 20m</div>
+      <div class="stat-lbl">Today</div>
+    </div>
+  </div>
+</body>
+</html>

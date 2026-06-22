@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ShadowShelf — Privacy Policy</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0d1117;
+      color: #94a3b8;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      line-height: 1.8;
+      padding: 60px 24px 80px;
+    }
+    .container { max-width: 680px; margin: 0 auto; }
+    .logo { display: flex; align-items: center; gap: 14px; margin-bottom: 48px; }
+    .logo-icon {
+      width: 48px; height: 48px; border-radius: 14px;
+      background: linear-gradient(135deg, #06b6d4, #0ea5e9);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; flex-shrink: 0;
+    }
+    .logo-text { font-size: 22px; font-weight: 800; color: #f1f5f9; letter-spacing: -0.04em; }
+    .logo-sub  { font-size: 12px; color: #334155; margin-top: 2px; }
+    h1 { font-size: 32px; font-weight: 800; color: #f1f5f9; letter-spacing: -0.04em; margin-bottom: 10px; }
+    .updated { font-size: 13px; color: #334155; margin-bottom: 48px; }
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.25);
+      color: #34d399; border-radius: 99px; padding: 6px 14px;
+      font-size: 13px; font-weight: 700; margin-bottom: 40px;
+    }
+    h2 { font-size: 16px; font-weight: 700; color: #e2e8f0; margin: 36px 0 12px; text-transform: uppercase; letter-spacing: 0.06em; font-size: 11px; }
+    p  { font-size: 15px; color: #64748b; margin-bottom: 12px; }
+    ul { padding-left: 20px; color: #64748b; font-size: 15px; }
+    li { margin-bottom: 6px; }
+    strong { color: #94a3b8; }
+    .section {
+      background: rgba(255,255,255,0.025);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 16px; padding: 24px 28px; margin-bottom: 16px;
+    }
+    .contact-link { color: #38bdf8; text-decoration: none; }
+    .contact-link:hover { text-decoration: underline; }
+    hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 40px 0; }
+    footer { font-size: 12px; color: #1e293b; text-align: center; margin-top: 60px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <div class="logo-icon">🕵️</div>
+      <div>
+        <div class="logo-text">ShadowShelf</div>
+        <div class="logo-sub">Your Digital Mirror</div>
+      </div>
+    </div>
+
+    <h1>Privacy Policy</h1>
+    <p class="updated">Last updated: June 2026</p>
+
+    <div class="badge">🔒 100% On-Device · Zero Telemetry · No Account Required</div>
+
+    <div class="section">
+      <h2>The short version</h2>
+      <p>
+        <strong>ShadowShelf collects nothing. Transmits nothing. Stores everything only on your device.</strong>
+        There are no servers, no accounts, no analytics, and no third-party SDKs.
+      </p>
+    </div>
+
+    <div class="section">
+      <h2>What data is stored and where</h2>
+      <p>The following data is created by your use of ShadowShelf and stored <strong>only in Chrome's local IndexedDB on your device</strong>:</p>
+      <ul>
+        <li>Page visit history (URL, domain, time spent, category)</li>
+        <li>Text highlights you save from web pages</li>
+        <li>Clipboard entries captured by the clipboard tracker</li>
+        <li>Focus timer history and session records</li>
+        <li>Focus streak data and personal records</li>
+      </ul>
+      <p style="margin-top: 14px;">This data <strong>never leaves your browser</strong>. It is never uploaded, synced to a server, or shared with any third party.</p>
+    </div>
+
+    <div class="section">
+      <h2>Chrome Sync</h2>
+      <p>
+        Your <strong>extension settings</strong> (such as break interval, blocked domains, category limits, and notification preferences) may sync across your devices via Chrome's built-in sync.
+        <strong>No browsing activity, highlights, clipboard data, or timer history is included in this sync.</strong>
+      </p>
+    </div>
+
+    <div class="section">
+      <h2>Network requests</h2>
+      <p>
+        ShadowShelf makes <strong>zero network requests</strong>. The extension contains no analytics libraries, no crash reporters, no A/B testing SDKs, and no external API calls of any kind.
+      </p>
+    </div>
+
+    <div class="section">
+      <h2>Permissions and why they are needed</h2>
+      <ul>
+        <li><strong>storage</strong> — Save your data locally and sync settings via Chrome Sync</li>
+        <li><strong>tabs / activeTab</strong> — Detect the current active site for time tracking</li>
+        <li><strong>clipboardRead</strong> — Clipboard history feature (only when the feature is enabled)</li>
+        <li><strong>alarms</strong> — Pomodoro timer, break reminders, daily recap, and daily data pruning</li>
+        <li><strong>notifications</strong> — Timer completion alerts, streak milestones, goal notifications</li>
+        <li><strong>idle</strong> — Pause tracking when you step away from your computer</li>
+        <li><strong>host_permissions (&lt;all_urls&gt;)</strong> — Track time across all websites and inject the focus blocker overlay during timer sessions</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>Data retention and deletion</h2>
+      <p>
+        You can configure how many days of history ShadowShelf retains (default: 30 days). You can manually prune older data or export and delete all your data at any time from the Settings tab in the dashboard.
+        Uninstalling the extension permanently removes all locally stored data.
+      </p>
+    </div>
+
+    <div class="section">
+      <h2>Children's privacy</h2>
+      <p>ShadowShelf does not knowingly collect any information from anyone under the age of 13.</p>
+    </div>
+
+    <div class="section">
+      <h2>Changes to this policy</h2>
+      <p>If this policy changes, the updated version will be published at this URL with a new "Last updated" date. Since no data is collected, any changes would only reflect new features or clarifications.</p>
+    </div>
+
+    <hr />
+
+    <div class="section">
+      <h2>Contact</h2>
+      <p>Questions about this privacy policy? Reach out at <a class="contact-link" href="mailto:vijaysureshspillbox@gmail.com">vijaysureshspillbox@gmail.com</a></p>
+    </div>
+
+    <footer>ShadowShelf · Privacy Policy · <a class="contact-link" href="https://github.com/VS-32/ShadowShelf">github.com/VS-32/ShadowShelf</a></footer>
+  </div>
+</body>
+</html>

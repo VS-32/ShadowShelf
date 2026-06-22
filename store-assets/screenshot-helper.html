@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<!--
+  SCREENSHOT HELPER — ShadowShelf Store Assets
+  ─────────────────────────────────────────────
+  1. Load the extension as unpacked in Chrome (chrome://extensions → Load unpacked → select dist/)
+  2. Open THIS file in Chrome
+  3. For each screen below, click the button → new window opens at 1280x800 → take screenshot
+     Chrome shortcut: Ctrl+Shift+P in DevTools → "Capture screenshot"
+  4. Save each screenshot as screenshot-1.png, screenshot-2.png etc.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ShadowShelf Screenshot Helper</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0d1117; font-family: 'Inter', sans-serif; color: #94a3b8; padding: 48px 32px; }
+    h1 { font-size: 28px; font-weight: 800; color: #f1f5f9; letter-spacing: -0.04em; margin-bottom: 6px; }
+    .sub { font-size: 14px; color: #475569; margin-bottom: 40px; }
+    .steps {
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 14px; padding: 20px 24px; margin-bottom: 36px;
+    }
+    .steps h2 { font-size: 11px; font-weight: 700; color: #334155; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px; }
+    .steps ol { padding-left: 18px; }
+    .steps li { font-size: 13px; color: #64748b; margin-bottom: 8px; line-height: 1.6; }
+    .steps code { background: rgba(255,255,255,0.06); border-radius: 4px; padding: 1px 6px; font-size: 12px; color: #38bdf8; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+    .card {
+      background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 14px; padding: 20px 22px;
+    }
+    .card-num { font-size: 11px; font-weight: 700; color: #334155; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+    .card-title { font-size: 16px; font-weight: 700; color: #e2e8f0; margin-bottom: 6px; }
+    .card-desc { font-size: 12px; color: #475569; margin-bottom: 16px; line-height: 1.6; }
+    button {
+      width: 100%; padding: 10px 0; border-radius: 9px; border: none; cursor: pointer;
+      font-family: inherit; font-size: 13px; font-weight: 700;
+      background: linear-gradient(135deg, #06b6d4, #0ea5e9);
+      color: #fff; transition: opacity 0.15s;
+    }
+    button:hover { opacity: 0.85; }
+    button.secondary {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+      color: #64748b;
+    }
+    .note {
+      margin-top: 10px; font-size: 11px; color: #1e293b; font-style: italic; text-align: center;
+    }
+    .promo-section { margin-top: 40px; }
+    .promo-section h2 { font-size: 18px; font-weight: 700; color: #e2e8f0; margin-bottom: 16px; letter-spacing: -0.02em; }
+  </style>
+</head>
+<body>
+  <h1>📸 ShadowShelf Screenshot Helper</h1>
+  <div class="sub">Opens each store screenshot at exactly 1280×800</div>
+
+  <div class="steps">
+    <h2>Before you start</h2>
+    <ol>
+      <li>Load the extension: <code>chrome://extensions</code> → Enable Developer Mode → Load unpacked → select <code>dist/</code></li>
+      <li>Use ShadowShelf for a few minutes so you have real data (visit a few sites, start a timer)</li>
+      <li>For each card below, click the button — a new 1280×800 window opens</li>
+      <li>Open DevTools in that window (<code>F12</code>) → <code>Ctrl+Shift+P</code> → type <code>Capture screenshot</code> → Enter</li>
+      <li>Rename saved files: <code>screenshot-1.png</code> through <code>screenshot-5.png</code></li>
+    </ol>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="card-num">Screenshot 1 of 5</div>
+      <div class="card-title">🗂 New Tab — Daily Dashboard</div>
+      <div class="card-desc">Shows the clock, greeting, focus streak badge, today's focus score + time online, and the daily goal progress bar.</div>
+      <button onclick="openNewTab()">Open New Tab (1280×800)</button>
+      <div class="note">Tip: open a new tab after using the extension for a bit so stats are populated</div>
+    </div>
+
+    <div class="card">
+      <div class="card-num">Screenshot 2 of 5</div>
+      <div class="card-title">🟢 Popup — Timer + Score</div>
+      <div class="card-desc">Shows the extension popup with an active timer, focus score, streak badge, and daily quote. Start a timer before capturing.</div>
+      <button class="secondary" onclick="alert('Click the ShadowShelf icon in your toolbar.\n\nStart a timer first so it shows an active session.\n\nThen right-click the popup → Inspect → DevTools will anchor to the popup window. Use Ctrl+Shift+P → Capture screenshot.')">How to screenshot the popup ↗</button>
+      <div class="note">Popup screenshots: right-click popup → Inspect → DevTools attached to popup</div>
+    </div>
+
+    <div class="card">
+      <div class="card-num">Screenshot 3 of 5</div>
+      <div class="card-title">🏠 Dashboard Home — Records</div>
+      <div class="card-desc">Shows stat cards, daily goal progress bar, and the All-Time Personal Bests section (streak, score, most productive day).</div>
+      <button onclick="openDashboard('home')">Open Dashboard Home (1280×800)</button>
+    </div>
+
+    <div class="card">
+      <div class="card-num">Screenshot 4 of 5</div>
+      <div class="card-title">📊 Insights — Category Breakdown</div>
+      <div class="card-desc">Shows the category donut chart or bar chart with time breakdown. Visit several different types of sites first for good data.</div>
+      <button onclick="openDashboard('insights')">Open Insights Tab (1280×800)</button>
+    </div>
+
+    <div class="card">
+      <div class="card-num">Screenshot 5 of 5</div>
+      <div class="card-title">🔒 Settings — Privacy Banner</div>
+      <div class="card-desc">Shows the green "100% On-Device — Zero Telemetry" privacy banner, the data counts, and the Notifications & Goals section.</div>
+      <button onclick="openDashboard('settings')">Open Settings Tab (1280×800)</button>
+    </div>
+  </div>
+
+  <div class="promo-section">
+    <h2>🎨 Promotional Tile (440×280)</h2>
+    <div class="card">
+      <div class="card-title">Promotional Tile</div>
+      <div class="card-desc">
+        Open the tile designer in DevTools at exactly 440×280.<br><br>
+        Steps: Click button → new window opens → F12 → toggle device toolbar (Ctrl+Shift+M) →
+        set custom size <code>440 × 280</code> → Ctrl+Shift+P → <code>Capture screenshot</code>
+      </div>
+      <button onclick="openPromoTile()">Open Promo Tile Designer (440×280)</button>
+    </div>
+  </div>
+
+  <script>
+    const EXT_ID = '' // paste your extension ID here if you know it
+
+    function openNewTab() {
+      const w = window.open('chrome://newtab', '_blank', 'width=1280,height=800,toolbar=0,menubar=0')
+      // newtab is handled by the extension
+    }
+
+    function openDashboard(tab) {
+      const tabParam = tab ? `?tab=${tab}` : ''
+      // Try to open via extension runtime URL — paste your extension ID if known
+      const url = EXT_ID
+        ? `chrome-extension://${EXT_ID}/dashboard/index.html${tabParam}`
+        : `about:blank`
+      const w = window.open(url, '_blank', 'width=1280,height=800,toolbar=0,menubar=0')
+      if (!EXT_ID) {
+        alert(
+          'Paste your extension ID into the EXT_ID variable at the bottom of this file.\n\n' +
+          'Find it at chrome://extensions → ShadowShelf → copy the ID string.\n\n' +
+          'Then open:\nchrome-extension://YOUR_ID/dashboard/index.html'
+        )
+      }
+    }
+
+    function openPromoTile() {
+      window.open('promotional-tile.html', '_blank', 'width=440,height=280,toolbar=0,menubar=0')
+    }
+  </script>
+</body>
+</html>
